@@ -6,23 +6,39 @@ import { URLSearchParams } from 'url'
 import logger from '../../logger'
 
 import { Event } from '../../models'
-import { ReservoirActivity, ReservoirActivityResponse } from './reservoir.types'
+import {
+  ReservoirActivity,
+  ReservoirActivityResponse,
+  Sale
+} from '../../lib/reservoir/types'
+import { fetchFromReservoir } from '../../lib/reservoir/fetch'
 
-const RESERVOIR_URL = process.env.RESERVOIR_URL ?? 'https://api.reservoir.tools'
-const RESERVOIR_API_KEY = process.env.RESERVOIR_API_KEY ?? ''
-
+//represents the query params for the reservoir api
 type ActivityQueryParams = {
   collection: string
   types: string
   continuation?: string
 }
 
+type getActivitiesUntilTxHashParams = {
+  contractAddress: string
+  txHash?: string
+  requestLimit?: number
+}
+
+/**
+ * Fetches recent activity from Reservoir for a given collection, stopping when it finds the
+ * given txHash (if provided). Stops after making requestLimit requests.
+ * @param contractAddress The contract address of the collection to fetch activities for
+ * @param txHash The txHash to stop fetching at
+ * @param requestLimit 10 by default
+ * @returns array of ReservoirActivity objects
+ */
 export const getActivitiesUntilTxHash = async (
-  contractAddress: string,
-  txHash: string,
-  requestLimit: number = 10
+  params: getActivitiesUntilTxHashParams
 ): Promise<ReservoirActivity[]> => {
-  const url = `${RESERVOIR_URL}/collections/activity/v6`
+  const { contractAddress, txHash, requestLimit = 10 } = params
+
   let activities: ReservoirActivity[] = []
   let continuationToken: string | null = null
   let isDone = false
@@ -40,12 +56,14 @@ export const getActivitiesUntilTxHash = async (
       queryParams.continuation = continuationToken
     }
 
-    const params = new URLSearchParams(queryParams)
     requestCount += 1
-    const response = await fetch(`${url}?${params.toString()}`, {
-      headers: { 'X-API-Key': RESERVOIR_API_KEY }
-    })
-    const json = await response.json()
+
+    const params = new URLSearchParams(queryParams)
+    const url = `/collections/activity/v6?${params.toString()}`
+
+    logger.debug(`Fetching ${url}`)
+
+    const json = await fetchFromReservoir({ url })
     const newActivities = json.activities || []
 
     activities = [...activities, ...newActivities]
@@ -71,23 +89,12 @@ const fetchLatestActivity = async (
     types: 'sale'
   })
 
-  const fetchUrl = `${RESERVOIR_URL}/collections/activity/v6?${params.toString()}`
-  logger.debug(`Fetching ${fetchUrl}`)
+  const url = `/collections/activity/v6?${params.toString()}`
+  logger.debug(`Fetching ${url}`)
 
-  const response: Response = await fetch(fetchUrl, {
-    headers: {
-      'x-api-key': RESERVOIR_API_KEY
-    }
-  })
+  const result: ReservoirActivityResponse = await fetchFromReservoir({ url })
 
-  if (response.status >= 300) {
-    throw new Error(`Error fetching from Reservoir: ${response.status}`)
-  }
-
-  const reservoirActivity: ReservoirActivityResponse =
-    (await response.json()) as ReservoirActivityResponse
-
-  return reservoirActivity.activities
+  return result.activities
 }
 
 export const fetchListings = async (contractAddress: string) => {
@@ -107,4 +114,7 @@ export const fetchListings = async (contractAddress: string) => {
     // const event = await Event.create(eventData)
     // logger.debug(`Created event ${event.eventHash}`)
   }
+}
+function getSalesForTxHashes(contractAddress: string, txHashes: string[]) {
+  throw new Error('Function not implemented.')
 }

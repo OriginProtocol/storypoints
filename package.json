@@ -10,6 +10,7 @@
     "@types/supertest": "^2.0.12",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "fetch-retry-ts": "^1.1.25",
     "node-fetch": "2.6.7",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
@@ -21,8 +22,10 @@
     "@types/chai": "^4.3.4",
     "@types/express": "^4.17.17",
     "@types/mocha": "^10.0.1",
+    "@types/nock": "^11.1.0",
     "@types/node": "^18.15.11",
     "@types/node-fetch": "^2.6.3",
+    "@types/sinon": "^10.0.13",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "chai": "^4.3.7",
@@ -33,6 +36,7 @@
     "nodemon": "^2.0.22",
     "pino": "^8.11.0",
     "rimraf": "^4.4.1",
+    "sinon": "^15.0.3",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.3"
   },
@@ -41,7 +45,7 @@
     "start:dev": "yarn nodemon",
     "start": "npm run build && node build/index.js",
     "lint": "eslint . --ext .ts",
-    "test": "NODE_ENV=test LOG_LEVEL=info mocha",
+    "test": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test mocha",
     "test:debug": "LOG_LEVEL=debug mocha",
     "test:watch": "mocha --watch",
     "migrate": "ts-node $(yarn bin sequelize-cli) db:migrate",
@@ -50,13 +54,14 @@
   },
   "mocha": {
     "require": [
-      "ts-node/register"
+      "ts-node/register",
+      "./test/setup.ts"
     ],
     "extension": "ts",
     "spec": [
       "test/**/*.spec.ts"
     ],
-    "t": "30000",
+    "t": "3000",
     "watch": true,
     "watch-files": [
       "src/**/*.ts",

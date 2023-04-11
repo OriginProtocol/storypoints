@@ -1,28 +1,19 @@
 //chai tests for the listings jobs
 import { expect } from 'chai'
 import nock from 'nock'
-import dotenv from 'dotenv'
-
-dotenv.config({ path: '.env.test' })
 
 import {
   fetchListings,
   getActivitiesUntilTxHash
-} from '../../src/jobs/listings'
-import { listingsResponse } from './fixtures/listings'
+} from '../../../src/jobs/listings'
+import { listingsResponse } from '../fixtures/listings'
 
 const {
   RESERVOIR_URL = 'https://api.reservoir.tools',
   RESERVOIR_API_KEY = ''
 } = process.env
 
-describe('Fetching sales activity', () => {
-  afterEach(() => {
-    nock.cleanAll()
-  })
-
-  it('should ')
-})
+console.log(RESERVOIR_API_KEY)
 
 describe('getActivitiesUntilTxHash', () => {
   const contractAddress = '0x123'
@@ -41,6 +32,7 @@ describe('getActivitiesUntilTxHash', () => {
         ],
         continuation: 'continuationToken'
       })
+      //second response
       .get('/collections/activity/v6')
       .matchHeader('x-api-key', RESERVOIR_API_KEY)
       .query({
@@ -56,6 +48,15 @@ describe('getActivitiesUntilTxHash', () => {
         ],
         continuation: 'continuationToken2'
       })
+  })
+
+  afterEach(() => {
+    nock.cleanAll()
+  })
+
+  it('should stop fetching after reaching requestLimit, even if hash not found', async () => {
+    //third reponse
+    nock(RESERVOIR_URL)
       .get('/collections/activity/v6')
       .matchHeader('x-api-key', RESERVOIR_API_KEY)
       .query({
@@ -64,36 +65,76 @@ describe('getActivitiesUntilTxHash', () => {
         continuation: 'continuationToken2'
       })
       .reply(200, {
-        activities: [{ txHash: 'lastone' }]
+        activities: [{ txHash: 'third response' }]
       })
-  })
 
-  afterEach(() => {
-    nock.cleanAll()
-  })
-
-  it('should stop fetching after reaching requestLimit, even if hash not found', async () => {
-    const result = await getActivitiesUntilTxHash(
+    const result = await getActivitiesUntilTxHash({
       contractAddress,
-      'nonexistent',
-      3
-    )
+      txHash: 'nonexistent',
+      requestLimit: 3
+    })
+
+    console.log('ASDFASFASDF')
 
     expect(result).to.have.lengthOf(7)
     expect(result[0].txHash).to.equal('hash1')
     expect(result[1].txHash).to.equal('hash2')
     expect(result[4].txHash).to.equal('desiredHash')
-    expect(result[5].txHash).to.equal('hash6')
+    expect(result[6].txHash).to.equal('third response')
 
     // Should have made 3 requests
     expect(nock.isDone()).to.equal(true)
   })
 
-  it('should load until the desired hash is found', async () => {
-    const result = await getActivitiesUntilTxHash(
+  it('should keep requesting until the request limit if a txHash is not provided', async () => {
+    //third reponse
+    nock(RESERVOIR_URL)
+      .get('/collections/activity/v6')
+      .matchHeader('x-api-key', RESERVOIR_API_KEY)
+      .query({
+        collection: contractAddress,
+        types: 'sale',
+        continuation: 'continuationToken2'
+      })
+      .reply(200, {
+        activities: [{ txHash: 'third response' }],
+        continuation: 'continuationToken3'
+      })
+
+    //fourth response
+    nock(RESERVOIR_URL)
+      .get('/collections/activity/v6')
+      .matchHeader('x-api-key', RESERVOIR_API_KEY)
+      .query({
+        collection: contractAddress,
+        types: 'sale',
+        continuation: 'continuationToken3'
+      })
+      .reply(200, {
+        activities: [{ txHash: 'final response' }]
+      })
+
+    const result = await getActivitiesUntilTxHash({
       contractAddress,
-      'desiredHash'
-    )
+      requestLimit: 4
+    })
+
+    expect(result).to.have.lengthOf(8)
+    expect(result[0].txHash).to.equal('hash1')
+    expect(result[1].txHash).to.equal('hash2')
+    expect(result[4].txHash).to.equal('desiredHash')
+    expect(result[6].txHash).to.equal('third response')
+    expect(result[7].txHash).to.equal('final response')
+
+    // Should have made 4 requests
+    expect(nock.isDone()).to.equal(true)
+  })
+
+  it('should load until the desired hash is found', async () => {
+    const result = await getActivitiesUntilTxHash({
+      contractAddress,
+      txHash: 'desiredHash'
+    })
 
     expect(result).to.have.lengthOf(6)
     expect(result[0].txHash).to.equal('hash1')
@@ -102,6 +143,8 @@ describe('getActivitiesUntilTxHash', () => {
     expect(result[5].txHash).to.equal('hash6')
   })
 })
+
+describe('getSalesForTransactionIds', () => {})
 
 describe('Listings processor', () => {
   afterEach(() => {
@@ -117,9 +160,7 @@ describe('Listings processor', () => {
         types: 'sale'
       }
 
-      const scope = nock(
-        process.env.RESERVOR_URL ?? 'https://api.reservoir.tools/'
-      )
+      const scope = nock(RESERVOIR_URL)
         .matchHeader('x-api-key', RESERVOIR_API_KEY)
         .get('/collections/activity/v6')
         .query(params)
@@ -130,7 +171,7 @@ describe('Listings processor', () => {
     })
 
     it('should throw an exception if the Reservoir API is down', async () => {
-      nock(process.env.RESERVOR_URL ?? 'https://api.reservoir.tools/')
+      nock(RESERVOIR_URL)
         .get('/collections/activity/v6')
         .query(true)
         .reply(425, {
