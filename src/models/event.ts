@@ -14,6 +14,7 @@ class Event extends Model<
   InferAttributes<Event>,
   InferCreationAttributes<Event>
 > {
+  [x: string]: any
   declare id: CreationOptional<number>
   declare points: CreationOptional<number>
   declare currency: CreationOptional<string>

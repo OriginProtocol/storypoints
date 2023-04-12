@@ -27,3 +27,34 @@ Sequelize ORM to talk to the database. It's totally possible to have jobs that
 run in real-time - they don't all have to be cron. For example, we could have a
 job to re-check for royalties on a user's wallet after the complete a purchase
 flow, so that we can award points for that action.
+
+## Running the system locally
+
+To run the system locally, you need to have Node JS installed. You also need to
+have a postgres database running. See src/config/config.json for dev and test
+database configuration.
+
+To run the Node JS API:
+
+```
+yarn start:dev
+```
+
+Running the tests:
+
+```
+yarn test
+```
+
+## TODO and known issues:
+
+- Mocha seems to be stuck on auto watch, seems to be due to having its config in
+  package.json. Need to make it not do that to have CI job for tests
+- CD pipeline needs to be set up
+- Needs trigger for jobs to run. Combination of cron and webhooks, but
+  ultimately triggering code in the /src/jobs directory
+- The code exists to get all the collection activity and then all the sales
+  activity for those transaction hashes, so that we can award points for those
+  actions. But the code to actually award the points is not written yet. It will
+  just be a matter of looping over that array and applying whatever formula we
+  decide on for awarding points for those actions.

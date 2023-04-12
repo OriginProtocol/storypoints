@@ -5,19 +5,6 @@ import logger from '../../logger'
 const RESERVOIR_URL = process.env.RESERVOIR_URL ?? 'https://api.reservoir.tools'
 const RESERVOIR_API_KEY = process.env.RESERVOIR_API_KEY ?? ''
 
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-console.log(RESERVOIR_API_KEY)
-
 export interface FetchFromReservoirParams {
   url: string
   retries?: number
