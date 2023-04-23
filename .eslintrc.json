@@ -2,14 +2,14 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": "./tsconfig.json"
+    "project": ["./tsconfig.json", "**/tsconfig.json"]
   },
   "env": {
     "node": true,
     "es6": true,
     "mocha": true
   },
-  "plugins": ["@typescript-eslint", "mocha-no-only"],
+  "plugins": ["import", "@typescript-eslint", "mocha-no-only"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
@@ -24,8 +24,9 @@
   "rules": {
     "computed-property-spacing": ["error"],
     "key-spacing": ["error"],
+    "import/no-unresolved": ["error"],
     "no-case-declarations": ["off"],
-    "no-console": ["none"],
+    "no-console": ["error"],
     "no-var": ["error"],
     "no-undef": ["warn"],
     "object-curly-spacing": ["error", "always"],
@@ -43,5 +44,16 @@
     "comma-dangle": ["off", "always"],
     "@typescript-eslint/no-empty-function": "warn",
     "@typescript-eslint/no-explicit-any": "warn"
+  },
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true,
+        "project": "**/tsconfig.json"
+      }
+    }
   }
 }

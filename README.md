@@ -31,30 +31,38 @@ flow, so that we can award points for that action.
 ## Running the system locally
 
 To run the system locally, you need to have Node JS installed. You also need to
-have a postgres database running. See src/config/config.json for dev and test
-database configuration.
+have a postgres database running.
+
+You can configure the database and permissions with these queries:
+
+```sql
+CREATE DATABASE storypoints;
+CREATE USER storypoints;
+GRANT ALL ON DATABASE storypoints TO storypoints;
+GRANT ALL ON SCHEMA public TO storypoints;
+```
+
+To run migrations:
+
+```bash
+yarn migrate
+```
 
 To run the Node JS API:
 
-```
-yarn start:dev
+```bash
+yarn start
 ```
 
 Running the tests:
 
-```
+```bash
 yarn test
 ```
 
-## TODO and known issues:
+## TODO
 
-- Mocha seems to be stuck on auto watch, seems to be due to having its config in
-  package.json. Need to make it not do that to have CI job for tests
-- CD pipeline needs to be set up
-- Needs trigger for jobs to run. Combination of cron and webhooks, but
-  ultimately triggering code in the /src/jobs directory
-- The code exists to get all the collection activity and then all the sales
-  activity for those transaction hashes, so that we can award points for those
-  actions. But the code to actually award the points is not written yet. It will
-  just be a matter of looping over that array and applying whatever formula we
-  decide on for awarding points for those actions.
+- [ ] Need a /simulate endpoint so users can see what points they might get when
+      performing an action.
+- [ ] ENS names in output
+- [ ] Rules implementation
