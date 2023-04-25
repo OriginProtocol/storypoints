@@ -73,12 +73,18 @@ export interface FeeBreakdown {
   recipient: string
 }
 
+export type GetCollectionParams =
+  paths['/collections/v5']['get']['parameters']['query']
+export type GetCollectionResponse =
+  paths['/collections/v5']['get']['responses']['200']['schema']
 export type GetCollectionActivityParams =
   paths['/collections/activity/v6']['get']['parameters']['query']
 export type GetCollectionActivityResponse =
   paths['/collections/activity/v6']['get']['responses']['200']['schema']
-export type ReservoirCollectionActivity =
-  definitions['Model13']
+export type ReservoirCollectionActivity = definitions['Model13']
+export type GetOrderResponse =
+  paths['/orders/asks/v4']['get']['responses']['200']['schema']
+export type ReservoirOrder = definitions['Model148']
 
 // TODO: Remove all refs to this, use sdk
 export interface ReservoirActivity {

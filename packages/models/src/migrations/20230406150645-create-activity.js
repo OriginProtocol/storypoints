@@ -22,6 +22,10 @@ module.exports = {
       price: {
         type: Sequelize.DECIMAL,
       },
+      priceUSD: {
+        type: Sequelize.FLOAT,
+        field: 'price_usd',
+      },
       type: {
         type: Sequelize.STRING,
       },
@@ -47,6 +51,14 @@ module.exports = {
       description: {
         type: Sequelize.STRING,
       },
+      activityBlob: {
+        type: Sequelize.JSONB,
+        field: 'activity_blob',
+      },
+      orderBlob: {
+        type: Sequelize.JSONB,
+        field: 'order_blob',
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -66,8 +78,7 @@ module.exports = {
     })
   },
   async down(queryInterface) {
-    await queryInterface.dropTable('activity')
-
     await queryInterface.removeConstraint('activity', 'unique_activity_hash')
+    await queryInterface.dropTable('activity')
   },
 }

@@ -1,7 +1,7 @@
 // nonce: 15
 import { collectActivities } from '@storypoints/ingest'
-import { Activity, sequelize } from '@storypoints/models'
-import { addressMaybe, buf2hex, logger } from '@storypoints/utils'
+import { Activity, Collection, sequelize } from '@storypoints/models'
+import { addressMaybe, buf2hex, hex2buf, logger } from '@storypoints/utils'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import express, { NextFunction, Request, Response } from 'express'
 
@@ -73,6 +73,49 @@ if (isWorker) {
   // Conditional local runner
   app.post('/fetch', fetchHandler)
 }
+
+// Add a collection
+// TODO: Needs auth
+app.post(
+  '/collection',
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    const body = req.body as {
+      contractAddress: string
+      description: string
+      disabled?: boolean
+    }
+    const contractAddress = addressMaybe(body.contractAddress)
+    const { disabled = false, description } = body
+
+    if (!contractAddress) {
+      const msg = 'Invalid contractAddress'
+      log.warn({ contractAddress }, msg)
+      res.status(400).json({ error: msg })
+      return
+    }
+
+    const props = {
+      description,
+      disabled,
+    }
+    const [collection, created] = await Collection.findOrCreate({
+      where: { contractAddress: hex2buf(contractAddress) },
+      defaults: {
+        ...props,
+        contractAddress: hex2buf(contractAddress),
+      },
+    })
+
+    if (!created) {
+      await collection.update(props)
+    }
+
+    res.status(200).json({
+      success: true,
+      message: created ? 'Created collection' : 'Updated collection',
+    })
+  })
+)
 
 // Trigger a fetch sequence
 // TODO: Do we want this exposed in prod?  Periodic beanstalk task?

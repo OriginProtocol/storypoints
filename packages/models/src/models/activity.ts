@@ -1,5 +1,9 @@
 import { buf2hex, hex2buf, sha256 } from '@storypoints/utils'
 import {
+  ReservoirCollectionActivity,
+  ReservoirOrder,
+} from '@storypoints/utils/reservoir'
+import {
   AutoIncrement,
   BeforeCreate,
   Column,
@@ -15,12 +19,15 @@ import {
 
 export interface IActivity {
   activityHash?: Buffer
+  activityBlob: ReservoirCollectionActivity
   contractAddress: Buffer
   currency?: Buffer
   multiplier: number
   description?: string
+  orderBlob?: ReservoirOrder
   points: number
   price?: string
+  priceUSD?: number
   timestamp: Date
   type: string
   walletAddress?: Buffer
@@ -60,6 +67,13 @@ export default class Activity extends Model implements IActivity {
   @Column(DataType.DECIMAL)
   price: string
 
+  // Storing BigNumbers, not decimals
+  @Column({
+    type: DataType.FLOAT,
+    field: 'price_usd',
+  })
+  priceUSD: number
+
   @Column(DataType.STRING)
   type: string
 
@@ -90,6 +104,12 @@ export default class Activity extends Model implements IActivity {
 
   @Column(DataType.STRING)
   description: string
+
+  @Column(DataType.JSONB)
+  activityBlob: object
+
+  @Column(DataType.JSONB)
+  orderBlob?: object
 
   @CreatedAt
   @Column({ type: DataType.DATE, field: 'created_at' })

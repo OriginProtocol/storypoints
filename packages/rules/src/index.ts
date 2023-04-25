@@ -1,5 +1,5 @@
 import { IActivity } from '@storypoints/models'
-import { logger } from '@storypoints/utils'
+import { buf2hex, logger } from '@storypoints/utils'
 import fs from 'fs/promises'
 import path from 'path'
 
@@ -54,12 +54,21 @@ export async function scoreActivity(activity: IActivity): Promise<RuleContext> {
   const rules = await loadRules()
   let ctx: RuleContext = {
     valid: true,
-    multiplier: 0,
+    multiplier: 1,
     points: 0,
   }
 
   for (const rule of rules) {
     ctx = await rule.run(ctx, activity)
+
+    if (!ctx.valid) {
+      log.debug(
+        `Rules ${rule.name} has invalidated activity ${
+          activity.activityHash ? buf2hex(activity.activityHash) : 'UNK'
+        }`
+      )
+      break
+    }
   }
 
   return ctx

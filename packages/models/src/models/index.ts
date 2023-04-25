@@ -1,6 +1,7 @@
 import { QueryInterface } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import Activity, { IActivity, hashActivity } from './activity'
+import Collection, { ICollection } from './collection'
 
 const {
   POSTGRES_DB = 'storypoints',
@@ -31,7 +32,7 @@ const sequelize = new Sequelize(POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, {
   },
   logging: !!process.env.LOG_LEVEL,
 })
-sequelize.addModels([Activity])
+sequelize.addModels([Activity, Collection])
 
 export {
   QueryInterface,
@@ -40,4 +41,6 @@ export {
   hashActivity,
   Activity,
   IActivity,
+  Collection,
+  ICollection,
 }

@@ -18,6 +18,8 @@ import {
 } from '@storypoints/utils/reservoir'
 import { URLSearchParams } from 'url'
 
+import { fetchOrder } from '../orders'
+
 const log = logger.child({ app: 'ingest', module: 'listings' })
 const WANTED_RESERVOIR_TYPES = [
   'ask',
@@ -111,6 +113,7 @@ const transalateActivity = (
   price: activity.price?.amount?.raw,
   timestamp: activity.timestamp ? unixToJSDate(activity.timestamp) : new Date(),
   type: activity.type ?? '',
+  activityBlob: activity,
   walletAddress: activity.fromAddress
     ? hex2buf(activity.fromAddress)
     : undefined,
@@ -169,6 +172,7 @@ export async function collectActivities({
     for (const item of result.activities) {
       const actProps = transalateActivity(item)
       actProps.activityHash = hashActivity(actProps)
+      actProps.orderBlob = await fetchOrder(actProps.activityBlob.order.id)
 
       const score = await scoreActivity(actProps)
       actProps.valid = score.valid
