@@ -96,7 +96,11 @@ app.post(
       expires: number
     }
     const contractAddress = inhand.address(body.contractAddress, '')
-    const type = inhand.stringOptions(body.type, ['ask', 'bid'], '')
+    const type = inhand.stringOptions(
+      body.type,
+      ['ask', 'bid', 'ask_cancel', 'bid_cancel', 'sale'],
+      ''
+    )
     const price = inhand.bigint(body.price, BigInt(0))
     const royalty = inhand.bigint(body.royalty, BigInt(0))
     const currency = inhand.address(body.currency, '')
