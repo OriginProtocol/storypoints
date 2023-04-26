@@ -1,7 +1,15 @@
 // nonce: 25
 import { collectActivities } from '@storypoints/ingest'
 import { Activity, Collection, Op, sequelize } from '@storypoints/models'
-import { address, addressMaybe, hex2buf, logger } from '@storypoints/utils'
+import { scoreActivity } from '@storypoints/rules'
+import {
+  address,
+  addressMaybe,
+  buf2hex,
+  hex2buf,
+  logger,
+  unixnow,
+} from '@storypoints/utils'
 import { E_18, getOGN } from '@storypoints/utils/eth'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import express, { NextFunction, Request, Response } from 'express'
@@ -171,6 +179,73 @@ app.post(
     )
 
     res.status(200).json({ success: true, message: 'WORKER JOB!' })
+  })
+)
+
+app.post(
+  '/rescore',
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    const body = req.body as {
+      start?: number
+      end?: number
+      contractAddresses?: string[]
+    }
+    const { start, end } = body
+    const contractAddresses = (body.contractAddresses ?? [])
+      .filter((x) => x)
+      .map(addressMaybe)
+
+    if (!contractAddresses.length) {
+      const msg = 'Invalid contractAddress'
+      log.warn({ contractAddresses }, msg)
+      res.status(400).json({ error: msg })
+      return
+    }
+
+    const startStamp = start ? new Date(start) : 0
+    const endStamp = end ? new Date(end) : new Date()
+
+    const where = {
+      contractAddress: {
+        [Op.in]: contractAddresses.map((a) => hex2buf(a)),
+      },
+      timestamp: {
+        [Op.between]: [startStamp, endStamp],
+      },
+    }
+    console.log('where:', where)
+
+    const activities = await Activity.findAll({
+      where,
+    })
+
+    log.debug(`Potentially rescoring ${activities.length} activities.`)
+
+    for (const act of activities) {
+      const score = await scoreActivity(act)
+      if (
+        act.multiplier !== score.multiplier ||
+        act.points !== score.points ||
+        act.valid !== score.valid
+      ) {
+        log.debug(
+          `Rescoring activity ${
+            act.activityHash ? buf2hex(act.activityHash) : 'UNK'
+          }`
+        )
+        await act.update({
+          multiplier: score.multiplier,
+          points: score.points,
+          valid: score.valid,
+        })
+      }
+    }
+
+    log.info(
+      `Completed rescoring activities between ${startStamp} and ${endStamp}`
+    )
+
+    res.status(200).json({ success: true })
   })
 )
 
