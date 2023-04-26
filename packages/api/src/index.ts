@@ -1,6 +1,12 @@
 // nonce: 25
 import { collectActivities } from '@storypoints/ingest'
-import { Activity, Collection, Op, sequelize } from '@storypoints/models'
+import {
+  Activity,
+  Collection,
+  IActivity,
+  Op,
+  sequelize,
+} from '@storypoints/models'
 import { scoreActivity } from '@storypoints/rules'
 import {
   address,
@@ -11,6 +17,7 @@ import {
   unixnow,
 } from '@storypoints/utils'
 import { E_18, getOGN } from '@storypoints/utils/eth'
+import { ethToUSD } from '@storypoints/utils/exchangerate'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import express, { NextFunction, Request, Response } from 'express'
 
@@ -80,7 +87,6 @@ app.get('/', (req: Request, res: Response) => {
 app.post(
   '/simulate',
   awrap(async function (req: Request, res: Response): Promise<void> {
-    await Promise.resolve() // shuddup eslint
     const body = req.body as {
       contractAddress?: string
       type?: string
@@ -91,7 +97,6 @@ app.post(
     }
     const contractAddress = inhand.address(body.contractAddress, '')
     const type = inhand.stringOptions(body.type, ['ask', 'bid'], '')
-    //const fromAddress = inhand.address(body?.fromAddress)
     const price = inhand.bigint(body.price, BigInt(0))
     const royalty = inhand.bigint(body.royalty, BigInt(0))
     const currency = inhand.address(body.currency, '')
@@ -102,9 +107,61 @@ app.post(
       '/simulate'
     )
 
-    res
-      .status(200)
-      .json({ success: true, score: Math.floor(Math.random() * 100_000) })
+    const priceUSD = await ethToUSD(price)
+
+    // Speculative IActivity details that rules are looking for
+    const unow = unixnow()
+    const act: IActivity = {
+      multiplier: 1,
+      points: 0,
+      timestamp: new Date(),
+      contractAddress: hex2buf(contractAddress),
+      type,
+      price: price.toString(),
+      priceUSD: priceUSD,
+      currency: hex2buf(currency),
+      activityBlob: {
+        order: {
+          source: {
+            domain: 'story.xyz',
+          },
+        },
+      },
+      orderBlob: {
+        id: '0xdeadbeef',
+        kind: type,
+        side: 'sell',
+        tokenSetId: '',
+        tokenSetSchemaHash: '',
+        maker: '',
+        taker: '',
+        price: {
+          currency: {
+            contract: currency,
+          },
+          amount: {
+            raw: price.toString(),
+            //usd:
+          },
+        },
+        feeBreakdown: [
+          {
+            kind: 'royalty',
+            //recipeient: '',
+            bps: Number((royalty * 10000n) / price).valueOf(),
+          },
+        ],
+        validFrom: unow,
+        validUntil: expires,
+        expiration: 0,
+        createdAt: unow.toString(),
+        updatedAt: unow.toString(),
+      },
+    }
+
+    const score = await scoreActivity(act)
+
+    res.status(200).json({ success: true, score })
   })
 )
 
