@@ -203,6 +203,7 @@ export async function collectActivities({
 }
 
 export async function upsertActivites(activities: IActivity[]) {
+  log.debug(`Upserting ${activities.length} activities`)
   for (const item of activities) {
     let activity = await Activity.findOne({
       where: { activityHash: item.activityHash },
@@ -210,6 +211,8 @@ export async function upsertActivites(activities: IActivity[]) {
 
     if (activity) {
       await activity.update({ ...item })
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      log.debug(`Updated activity ${buf2hex(activity.activityHash!)}`)
     } else {
       activity = await Activity.create({ ...item })
       // if activityHash is undefined, something broke, so ignoring

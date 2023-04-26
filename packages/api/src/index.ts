@@ -1,9 +1,12 @@
-// nonce: 23
+// nonce: 25
 import { collectActivities } from '@storypoints/ingest'
 import { Activity, Collection, Op, sequelize } from '@storypoints/models'
 import { address, addressMaybe, hex2buf, logger } from '@storypoints/utils'
+import { E_18, getOGN } from '@storypoints/utils/eth'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import express, { NextFunction, Request, Response } from 'express'
+
+import * as inhand from './inhand'
 
 const sqs = new SQSClient({ region: process.env.AWS_REGION })
 const log = logger.child({
@@ -13,11 +16,26 @@ export const app = express()
 const port = process.env.PORT ?? '3000'
 const isProdEnv = !!process.env.APP_NAME
 const isWorker = process.env.IS_WORKER === 'true'
+const boostMultipliers: [bigint, number][] = [
+  [E_18 * BigInt(500000), 2.5],
+  [E_18 * BigInt(100000), 2.0],
+  [E_18 * BigInt(50000), 1.5],
+  [E_18 * BigInt(1000), 1.05],
+  [BigInt('0'), 1.0],
+]
+const findBoost = (amount: bigint): number => {
+  for (const [threshold, mplier] of boostMultipliers) {
+    if (amount >= threshold) return mplier
+  }
+
+  return 1.0
+}
 
 app.use(express.json())
 
 interface Leader {
   walletAddress: string
+  name: string
   score?: number
 }
 
@@ -156,30 +174,68 @@ app.post(
   })
 )
 
+app.post(
+  '/simulate',
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    await Promise.resolve() // shuddup eslint
+    const body = req.body as {
+      contractAddress?: string
+      type?: string
+      price?: string
+      royalty?: string
+      currency?: string
+      expires: number
+    }
+    const contractAddress = inhand.address(body.contractAddress, '')
+    const type = inhand.stringOptions(body.type, ['ask', 'bid'], '')
+    //const fromAddress = inhand.address(body?.fromAddress)
+    const price = inhand.bigint(body.price, BigInt(0))
+    const royalty = inhand.bigint(body.royalty, BigInt(0))
+    const currency = inhand.address(body.currency, '')
+    const expires = inhand.integer(body.expires, +new Date())
+
+    log.debug(
+      { contractAddress, type, price, royalty, currency, expires },
+      '/simulate'
+    )
+
+    res
+      .status(200)
+      .json({ success: true, score: Math.floor(Math.random() * 100_000) })
+  })
+)
+
 app.get(
   '/leaders',
   awrap(async function (req: Request, res: Response): Promise<void> {
-    const {
-      contractAddress,
-      type: activityType,
-      //since,
-      limit = 20,
-      sortField = 'score',
-      sortDirection = 'desc',
-    } = req.query
+    const contractAddresses = inhand.addresses(
+      req.query.contractAddress?.toString() ?? ''
+    )
+    const activityType = inhand.string(req.query.type?.toString() ?? '')
+    const limit = inhand.integer(req.query.limit)
+    const sortField = inhand.stringOptions(
+      req.query.sortField?.toString() ?? '',
+      ['score', 'walletAddress'],
+      'score'
+    )
+    const sortDirection = inhand.stringOptions(
+      req.query.sortDirection?.toString() ?? '',
+      ['asc', 'desc'],
+      'desc'
+    )
 
     const where: Record<string, unknown> = {
       points: {
         [Op.gt]: 0,
       },
     }
-    if (contractAddress) {
+    if (contractAddresses.length) {
       where.contractAddress = {
-        [Op.in]: (contractAddress as string).split(',').map((a) => hex2buf(a)),
+        [Op.in]: contractAddresses.map((a) => hex2buf(a)),
       }
     }
     if (activityType) {
-      where.type = activityType as string
+      where.type = activityType
     }
     /*if (since) {
       where.timestamp = {
@@ -196,15 +252,15 @@ app.get(
           [sequelize.literal('SUM(multiplier * points)'), 'score'],
         ],
         group: ['walletAddress'],
-        order: [
-          [sortField as string, sortDirection === 'asc' ? 'ASC' : 'DESC'],
-        ],
-        limit: parseInt(limit as string, 10),
+        order: [[sortField, sortDirection]],
+        limit,
       })
 
       const leaders: Leader[] = activities.map((item) => {
         const leader: Leader = {
           walletAddress: address(item.walletAddress),
+          // TODO: ENS
+          name: '',
           score: item.getDataValue('score') as number,
         }
         return leader
@@ -214,6 +270,66 @@ app.get(
       return
     } catch (error) {
       log.error(error, 'Error while fetching leaders')
+      res.status(500).json({ error: 'Internal Server Error' })
+      return
+    }
+  })
+)
+
+app.get(
+  '/user',
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    const contractAddresses = inhand.addresses(
+      req.query.contractAddress?.toString() ?? ''
+    )
+    const walletAddress = inhand.address(
+      req.query.walletAddress?.toString() ?? '',
+      ''
+    )
+    const activityType = inhand.string(req.query.type?.toString() ?? '')
+
+    if (!walletAddress) {
+      res.status(400).json({ error: 'Missing walletAddress' })
+      return
+    }
+
+    const where: Record<string, unknown> = {
+      walletAddress: hex2buf(walletAddress),
+    }
+    if (contractAddresses.length) {
+      where.contractAddress = {
+        [Op.in]: contractAddresses.map((a) => hex2buf(a)),
+      }
+    }
+    if (activityType) {
+      where.type = activityType
+    }
+
+    try {
+      const userRes = await Activity.findAll({
+        where,
+        attributes: [[sequelize.literal('SUM(multiplier * points)'), 'score']],
+      })
+
+      if (!userRes.length) {
+        res.status(200).json({
+          result: { points: 0, boost: 0, stake: BigInt(0).toString() },
+        })
+        return
+      }
+
+      const points = (userRes[0].getDataValue('score') as number | null) ?? 0
+
+      const ogn = getOGN()
+      const stake = (await ogn.balanceOf(walletAddress)) as bigint
+      const boost = findBoost(stake)
+
+      res
+        .status(200)
+        .json({ result: { points, boost, stake: stake.toString() } })
+      return
+    } catch (error) {
+      log.error(error, 'Error while getting user details')
       res.status(500).json({ error: 'Internal Server Error' })
       return
     }

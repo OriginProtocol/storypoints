@@ -16,7 +16,7 @@ async function loadModuleRules(): Promise<IRule[]> {
     path.join(rulesDir, f)
   )
 
-  let secretRuleFiles = []
+  let secretRuleFiles: string[] = []
   if (await isDir(secretRulesDir)) {
     secretRuleFiles = (await fs.readdir(secretRulesDir)).map((f) =>
       path.join(secretRulesDir, f)

@@ -114,6 +114,12 @@ export class StoryPoints extends Stack {
     webtierRole.addManagedPolicy(
       ManagedPolicy.fromAwsManagedPolicyName('AWSElasticBeanstalkWebTier'),
     )
+    webtierRole.addToPolicy(
+      new PolicyStatement({
+        resources: ['*'],
+        actions: ['cloudwatch:PutMetricData'],
+      }),
+    )
 
     const ec2InstanceProfile = new CfnInstanceProfile(
       this,

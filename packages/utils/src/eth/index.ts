@@ -6,6 +6,8 @@ let provider: JsonRpcProvider | undefined
 export const E_18 = BigInt('1000000000000000000')
 
 export function getProvider(): JsonRpcProvider {
+  if (!process.env.JSON_PRC_PROVIDER)
+    throw new Error('JSON_PRC_PROVIDER is undefined')
   if (!provider) {
     provider = new JsonRpcProvider(process.env.JSON_PRC_PROVIDER)
   }
