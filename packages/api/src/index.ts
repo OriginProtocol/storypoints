@@ -21,6 +21,7 @@ const log = logger.child({
   app: 'api',
 })
 export const app = express()
+const apiKey = process.env.API_KEY
 const port = process.env.PORT ?? '3000'
 const isProdEnv = !!process.env.APP_NAME
 const isWorker = process.env.IS_WORKER === 'true'
@@ -40,6 +41,19 @@ const findBoost = (amount: bigint): number => {
 }
 
 app.use(express.json())
+
+function apiKeyMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  const key = req.headers['x-api-key'] as string
+  if (key !== apiKey) {
+    res.status(401).json({ message: 'Unauthorized' })
+    return
+  }
+  next()
+}
 
 interface Leader {
   walletAddress: string
@@ -62,192 +76,6 @@ const awrap = (fn: ExpressAsyncHandler) => {
 app.get('/', (req: Request, res: Response) => {
   res.status(200).json({ message: 'Hello World!' })
 })
-
-const fetchHandler = awrap(async function (
-  req: Request,
-  res: Response
-): Promise<void> {
-  const body = req.body as {
-    full?: boolean
-    contractAddresses?: string[]
-    requestLimit?: number
-  }
-  const fullHistory = body.full === true
-  const requestLimit = body.requestLimit ?? 10
-  const contractAddresses = (body.contractAddresses ?? [])
-    .map(addressMaybe)
-    .filter((x) => x)
-
-  try {
-    for (const contractAddress of contractAddresses) {
-      await collectActivities({
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        contractAddress: contractAddress!,
-        fullHistory,
-        requestLimit,
-      })
-    }
-  } catch (err) {
-    // console.error(err)
-    log.error(err, 'Error fetching listings in fetchHandler')
-    res.status(500).json({ success: false, message: 'Internal server error' })
-    return
-  }
-
-  res.status(200).json({ success: true })
-})
-
-if (isWorker) {
-  app.post('/', fetchHandler)
-} else if (!isProdEnv) {
-  // Conditional local runner
-  app.post('/fetch', fetchHandler)
-}
-
-// Add a collection
-// TODO: Needs auth
-app.post(
-  '/collection',
-  awrap(async function (req: Request, res: Response): Promise<void> {
-    const body = req.body as {
-      contractAddress: string
-      description?: string
-      disabled?: boolean
-    }
-    const contractAddress = addressMaybe(body.contractAddress)
-    const { disabled = false, description = '' } = body
-
-    if (!contractAddress) {
-      const msg = 'Invalid contractAddress'
-      log.warn({ contractAddress }, msg)
-      res.status(400).json({ error: msg })
-      return
-    }
-
-    const props = {
-      description,
-      disabled,
-    }
-    const [collection, created] = await Collection.findOrCreate({
-      where: { contractAddress: hex2buf(contractAddress) },
-      defaults: {
-        ...props,
-        contractAddress: hex2buf(contractAddress),
-      },
-    })
-
-    if (!created) {
-      await collection.update(props)
-    }
-
-    res.status(200).json({
-      success: true,
-      message: created ? 'Created collection' : 'Updated collection',
-    })
-  })
-)
-
-// Trigger a fetch sequence
-// TODO: Do we want this exposed in prod?  Periodic beanstalk task?
-app.post(
-  '/trigger',
-  awrap(async function (req: Request, res: Response): Promise<void> {
-    const body = req.body as { full?: boolean; contractAddresses?: string[] }
-    const fullHistory = body.full === true
-    const contractAddresses = (body.contractAddresses ?? [])
-      .filter((x) => x)
-      .map(addressMaybe)
-
-    if (!contractAddresses.length) {
-      const msg = 'Invalid contractAddress'
-      log.warn({ contractAddresses }, msg)
-      res.status(400).json({ error: msg })
-      return
-    }
-
-    const { APP_NAME = 'storypoints', WORKER_QUEUE_URL } = process.env
-    if (!WORKER_QUEUE_URL) throw new Error(`WORKER_QUEUE_URL is not defined`)
-    await sqs.send(
-      new SendMessageCommand({
-        QueueUrl: WORKER_QUEUE_URL,
-        MessageBody: JSON.stringify({
-          contractAddresses,
-          fullHistory,
-        }),
-        MessageGroupId: `${APP_NAME}-worker`,
-      })
-    )
-
-    res.status(200).json({ success: true, message: 'WORKER JOB!' })
-  })
-)
-
-app.post(
-  '/rescore',
-  awrap(async function (req: Request, res: Response): Promise<void> {
-    const body = req.body as {
-      start?: number
-      end?: number
-      contractAddresses?: string[]
-    }
-    const { start, end } = body
-    const contractAddresses = (body.contractAddresses ?? [])
-      .filter((x) => x)
-      .map(addressMaybe)
-
-    if (!contractAddresses.length) {
-      const msg = 'Invalid contractAddress'
-      log.warn({ contractAddresses }, msg)
-      res.status(400).json({ error: msg })
-      return
-    }
-
-    const startStamp = start ? new Date(start) : 0
-    const endStamp = end ? new Date(end) : new Date()
-
-    const where = {
-      contractAddress: {
-        [Op.in]: contractAddresses.map((a) => hex2buf(a)),
-      },
-      timestamp: {
-        [Op.between]: [startStamp, endStamp],
-      },
-    }
-    console.log('where:', where)
-
-    const activities = await Activity.findAll({
-      where,
-    })
-
-    log.debug(`Potentially rescoring ${activities.length} activities.`)
-
-    for (const act of activities) {
-      const score = await scoreActivity(act)
-      if (
-        act.multiplier !== score.multiplier ||
-        act.points !== score.points ||
-        act.valid !== score.valid
-      ) {
-        log.debug(
-          `Rescoring activity ${
-            act.activityHash ? buf2hex(act.activityHash) : 'UNK'
-          }`
-        )
-        await act.update({
-          multiplier: score.multiplier,
-          points: score.points,
-          valid: score.valid,
-        })
-      }
-    }
-
-    log.info(
-      `Completed rescoring activities between ${startStamp} and ${endStamp}`
-    )
-
-    res.status(200).json({ success: true })
-  })
-)
 
 app.post(
   '/simulate',
@@ -413,6 +241,195 @@ app.get(
       res.status(500).json({ error: 'Internal Server Error' })
       return
     }
+  })
+)
+
+const fetchHandler = awrap(async function (
+  req: Request,
+  res: Response
+): Promise<void> {
+  const body = req.body as {
+    full?: boolean
+    contractAddresses?: string[]
+    requestLimit?: number
+  }
+  const fullHistory = body.full === true
+  const requestLimit = body.requestLimit ?? 10
+  const contractAddresses = (body.contractAddresses ?? [])
+    .map(addressMaybe)
+    .filter((x) => x)
+
+  try {
+    for (const contractAddress of contractAddresses) {
+      await collectActivities({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        contractAddress: contractAddress!,
+        fullHistory,
+        requestLimit,
+      })
+    }
+  } catch (err) {
+    // console.error(err)
+    log.error(err, 'Error fetching listings in fetchHandler')
+    res.status(500).json({ success: false, message: 'Internal server error' })
+    return
+  }
+
+  res.status(200).json({ success: true })
+})
+
+if (isWorker) {
+  app.post('/', fetchHandler)
+} else if (!isProdEnv) {
+  // Conditional local runner
+  app.post('/fetch', fetchHandler)
+}
+
+// Add a collection
+// TODO: Needs auth
+app.post(
+  '/collection',
+  apiKeyMiddleware,
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    const body = req.body as {
+      contractAddress: string
+      description?: string
+      disabled?: boolean
+    }
+    const contractAddress = addressMaybe(body.contractAddress)
+    const { disabled = false, description = '' } = body
+
+    if (!contractAddress) {
+      const msg = 'Invalid contractAddress'
+      log.warn({ contractAddress }, msg)
+      res.status(400).json({ error: msg })
+      return
+    }
+
+    const props = {
+      description,
+      disabled,
+    }
+    const [collection, created] = await Collection.findOrCreate({
+      where: { contractAddress: hex2buf(contractAddress) },
+      defaults: {
+        ...props,
+        contractAddress: hex2buf(contractAddress),
+      },
+    })
+
+    if (!created) {
+      await collection.update(props)
+    }
+
+    res.status(200).json({
+      success: true,
+      message: created ? 'Created collection' : 'Updated collection',
+    })
+  })
+)
+
+// Trigger a fetch sequence
+// TODO: Do we want this exposed in prod?  Periodic beanstalk task?
+app.post(
+  '/trigger',
+  apiKeyMiddleware,
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    const body = req.body as { full?: boolean; contractAddresses?: string[] }
+    const fullHistory = body.full === true
+    const contractAddresses = (body.contractAddresses ?? [])
+      .filter((x) => x)
+      .map(addressMaybe)
+
+    if (!contractAddresses.length) {
+      const msg = 'Invalid contractAddress'
+      log.warn({ contractAddresses }, msg)
+      res.status(400).json({ error: msg })
+      return
+    }
+
+    const { APP_NAME = 'storypoints', WORKER_QUEUE_URL } = process.env
+    if (!WORKER_QUEUE_URL) throw new Error(`WORKER_QUEUE_URL is not defined`)
+    await sqs.send(
+      new SendMessageCommand({
+        QueueUrl: WORKER_QUEUE_URL,
+        MessageBody: JSON.stringify({
+          contractAddresses,
+          fullHistory,
+        }),
+        MessageGroupId: `${APP_NAME}-worker`,
+      })
+    )
+
+    res.status(200).json({ success: true, message: 'WORKER JOB!' })
+  })
+)
+
+app.post(
+  '/rescore',
+  apiKeyMiddleware,
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    const body = req.body as {
+      start?: number
+      end?: number
+      contractAddresses?: string[]
+    }
+    const { start, end } = body
+    const contractAddresses = (body.contractAddresses ?? [])
+      .filter((x) => x)
+      .map(addressMaybe)
+
+    if (!contractAddresses.length) {
+      const msg = 'Invalid contractAddress'
+      log.warn({ contractAddresses }, msg)
+      res.status(400).json({ error: msg })
+      return
+    }
+
+    const startStamp = start ? new Date(start) : 0
+    const endStamp = end ? new Date(end) : new Date()
+
+    const where = {
+      contractAddress: {
+        [Op.in]: contractAddresses.map((a) => hex2buf(a)),
+      },
+      timestamp: {
+        [Op.between]: [startStamp, endStamp],
+      },
+    }
+    console.log('where:', where)
+
+    const activities = await Activity.findAll({
+      where,
+    })
+
+    log.debug(`Potentially rescoring ${activities.length} activities.`)
+
+    for (const act of activities) {
+      const score = await scoreActivity(act)
+      if (
+        act.multiplier !== score.multiplier ||
+        act.points !== score.points ||
+        act.valid !== score.valid
+      ) {
+        log.debug(
+          `Rescoring activity ${
+            act.activityHash ? buf2hex(act.activityHash) : 'UNK'
+          }`
+        )
+        await act.update({
+          multiplier: score.multiplier,
+          points: score.points,
+          valid: score.valid,
+        })
+      }
+    }
+
+    log.info(
+      `Completed rescoring activities between ${startStamp.toString()} and ${endStamp.toString()}`
+    )
+
+    res.status(200).json({ success: true })
   })
 )
 
