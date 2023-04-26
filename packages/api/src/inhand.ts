@@ -68,3 +68,15 @@ export function bigint(v: unknown, defaultValue: bigint): bigint {
   }
   return defaultValue
 }
+
+export function date(v: unknown, defaultValue: Date): Date {
+  if (['string', 'number'].includes(typeof v)) {
+    try {
+      return new Date(typeof v === 'number' ? v : parseInt(v as string))
+    } catch {
+      /* pass */
+    }
+  }
+
+  return defaultValue
+}

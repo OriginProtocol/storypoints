@@ -298,10 +298,15 @@ app.get(
       ['asc', 'desc'],
       'desc'
     )
+    const start = inhand.date(req.query.start, new Date(0))
+    const end = inhand.date(req.query.start, new Date())
 
     const where: Record<string, unknown> = {
       points: {
         [Op.gt]: 0,
+      },
+      timestamp: {
+        [Op.between]: [start, end],
       },
     }
     if (contractAddresses.length) {
