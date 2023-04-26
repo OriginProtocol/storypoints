@@ -72,6 +72,7 @@ export default class ApiBundler implements ILocalBundling {
       platform: 'node',
       entryPoints: rulesFiles.concat(secretFiles),
       outdir,
+      preserveSymlinks: true,
     })
 
     return true
