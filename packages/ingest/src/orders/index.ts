@@ -2,11 +2,10 @@
  * Fetches order data Reservoir
  */
 
-import { Activity } from '@storypoints/models'
+import { IActivity } from '@storypoints/models'
 import {
   fetchFromReservoir,
   GetOrderResponse,
-  ReservoirCollectionActivity,
   ReservoirOrder,
 } from '@storypoints/utils/reservoir'
 import { logger } from '@storypoints/utils'
@@ -50,12 +49,11 @@ export async function fetchOrderBid(
 }
 
 // Add an orderBlob and an IActivity
-export async function addOrderBlob(
-  activity: Activity,
-  save = true
-): Promise<Activity> {
-  const orderId = (activity.activityBlob as ReservoirCollectionActivity).order
-    .id
+export async function addOrderBlob(activity: IActivity): Promise<IActivity> {
+  const orderId = activity.activityBlob.order?.id
+
+  if (!orderId) return activity
+
   let order = await fetchOrderAsk(orderId)
 
   if (!order) {
@@ -67,10 +65,6 @@ export async function addOrderBlob(
   }
 
   activity.orderBlob = order
-
-  if (save) {
-    await activity.save()
-  }
 
   return activity
 }

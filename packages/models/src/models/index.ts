@@ -1,4 +1,4 @@
-import { QueryInterface } from 'sequelize'
+import { Op, QueryInterface } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
 import Activity, { IActivity, hashActivity } from './activity'
 import Collection, { ICollection } from './collection'
@@ -35,6 +35,7 @@ const sequelize = new Sequelize(POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, {
 sequelize.addModels([Activity, Collection])
 
 export {
+  Op,
   QueryInterface,
   Sequelize,
   sequelize,

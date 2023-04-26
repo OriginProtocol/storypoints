@@ -18,7 +18,7 @@ import {
 } from '@storypoints/utils/reservoir'
 import { URLSearchParams } from 'url'
 
-import { fetchOrder } from '../orders'
+import { addOrderBlob } from '../orders'
 
 const log = logger.child({ app: 'ingest', module: 'listings' })
 const WANTED_RESERVOIR_TYPES = [
@@ -69,7 +69,7 @@ export const fetchActivities = async ({
     queryParams.continuation = continuationToken
   }
 
-  const params = new URLSearchParams(queryParams)
+  const params = new URLSearchParams({ ...queryParams })
   for (const rType of WANTED_RESERVOIR_TYPES) {
     // Multiple params for multiple values, not command delimited or whatever
     params.append('types', rType)
@@ -111,6 +111,7 @@ const transalateActivity = (
   description: '',
   points: 0,
   price: activity.price?.amount?.raw,
+  priceUSD: activity.price?.amount?.usd,
   timestamp: activity.timestamp ? unixToJSDate(activity.timestamp) : new Date(),
   type: activity.type ?? '',
   activityBlob: activity,
@@ -168,24 +169,29 @@ export async function collectActivities({
     continuationToken = result.continuationToken
     requestCount += 1
 
-    const activities = []
     for (const item of result.activities) {
       const actProps = transalateActivity(item)
       actProps.activityHash = hashActivity(actProps)
-      actProps.orderBlob = await fetchOrder(actProps.activityBlob.order.id)
+
+      // TODO: For now, we're only adding order blobs to native activities and
+      // sales for efficiency raisins.  Wonder if we could make this lazy on
+      // the model somehow?
+      if (
+        actProps.type === 'sale' ||
+        actProps.activityBlob.order?.source?.domain === 'story.xyz'
+      ) {
+        await addOrderBlob(actProps)
+      }
 
       const score = await scoreActivity(actProps)
       actProps.valid = score.valid
       actProps.points = score.points
       actProps.multiplier = score.multiplier
 
-      activities.push(actProps)
+      log.info(`upserting activity ${buf2hex(actProps.activityHash)}`)
+      await upsertActivites([actProps])
     }
 
-    if (activities.length) {
-      log.info(`upserting ${activities.length} activities`)
-      await upsertActivites(activities)
-    }
     if (result.isDone) {
       log.debug('fetchActivities() indicated isDone')
       break

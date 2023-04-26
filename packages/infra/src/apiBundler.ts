@@ -57,17 +57,21 @@ export default class ApiBundler implements ILocalBundling {
     const rulesSourceDir = path.resolve(
       path.join(__dirname, '..', '..', 'rules', 'src', 'rules'),
     )
-    const rulesFiles = fs.readdirSync(rulesSourceDir)
-
-    // Create rules directory
-    const rulesOutDir = path.join(outdir, 'rules')
-    fs.mkdirSync(rulesOutDir)
+    const rulesFiles = fs
+      .readdirSync(rulesSourceDir)
+      .map((f) => path.join(rulesSourceDir, f))
+    const secretRulesSourceDir = path.resolve(
+      path.join(__dirname, '..', '..', 'rules', 'src', 'secret'),
+    )
+    const secretFiles = fs
+      .readdirSync(secretRulesSourceDir)
+      .map((f) => path.join(secretRulesSourceDir, f))
 
     buildSync({
       ...bundleOpts,
       platform: 'node',
-      entryPoints: rulesFiles.map((f) => path.join(rulesSourceDir, f)),
-      outdir: rulesOutDir,
+      entryPoints: rulesFiles.concat(secretFiles),
+      outdir,
     })
 
     return true

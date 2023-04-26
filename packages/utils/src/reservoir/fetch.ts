@@ -12,12 +12,6 @@ export interface FetchFromReservoirParams {
   retryOn?: number[]
 }
 
-const fetch = fetchBuilder(originalFetch, {
-  retries: 3,
-  retryDelay: 1000,
-  retryOn: [419, 503, 504]
-})
-
 export async function fetchFromReservoir<T>(
   params: FetchFromReservoirParams
 ): Promise<T> {
@@ -25,23 +19,23 @@ export async function fetchFromReservoir<T>(
     url,
     retries = 3,
     retryDelay = 1000,
-    retryOn = [419, 503, 504]
+    retryOn = [419, 429, 503, 504],
   } = params
   //gives us exponential backoff and retries - see https://github.com/sjinks/node-fetch-retry-ts
-  // const fetch = fetchBuilder(originalFetch, {
-  //   retries,
-  //   retryDelay,
-  //   retryOn
-  // })
+  const fetch = fetchBuilder(originalFetch, {
+    retries,
+    retryDelay,
+    retryOn,
+  })
 
   logger.info(`Fetching from Reservoir API: ${RESERVOIR_URL}${url}`)
-  const response = await originalFetch(`${RESERVOIR_URL}${url}`, {
-    headers: { 'X-API-Key': RESERVOIR_API_KEY }
+  const response = await fetch(`${RESERVOIR_URL}${url}`, {
+    headers: { 'X-API-Key': RESERVOIR_API_KEY },
   })
 
   if (!response.ok) {
     throw new Error(`Error fetching from Reservoir: ${response.status}`)
   }
 
-  return await response.json() as T
+  return (await response.json()) as T
 }

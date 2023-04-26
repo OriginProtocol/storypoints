@@ -1,6 +1,7 @@
 export * from './address'
 export * from './date'
 export * from './eth'
+export * from './fs'
 export * from './hash'
 export * from './hex'
 export * from './reservoir'

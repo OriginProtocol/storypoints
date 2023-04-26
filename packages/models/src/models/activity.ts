@@ -105,11 +105,17 @@ export default class Activity extends Model implements IActivity {
   @Column(DataType.STRING)
   description: string
 
-  @Column(DataType.JSONB)
-  activityBlob: object
+  @Column({
+    type: DataType.JSONB,
+    field: 'activity_blob',
+  })
+  activityBlob: ReservoirCollectionActivity
 
-  @Column(DataType.JSONB)
-  orderBlob?: object
+  @Column({
+    type: DataType.JSONB,
+    field: 'order_blob',
+  })
+  orderBlob?: ReservoirOrder
 
   @CreatedAt
   @Column({ type: DataType.DATE, field: 'created_at' })

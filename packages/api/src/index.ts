@@ -1,7 +1,7 @@
-// nonce: 15
+// nonce: 23
 import { collectActivities } from '@storypoints/ingest'
-import { Activity, Collection, sequelize } from '@storypoints/models'
-import { addressMaybe, buf2hex, hex2buf, logger } from '@storypoints/utils'
+import { Activity, Collection, Op, sequelize } from '@storypoints/models'
+import { address, addressMaybe, hex2buf, logger } from '@storypoints/utils'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import express, { NextFunction, Request, Response } from 'express'
 
@@ -18,8 +18,7 @@ app.use(express.json())
 
 interface Leader {
   walletAddress: string
-  pointsSum?: number
-  priceSum?: number
+  score?: number
 }
 
 type ExpressAsyncHandler = (
@@ -27,7 +26,6 @@ type ExpressAsyncHandler = (
   res: Response,
   next?: NextFunction
 ) => Promise<unknown>
-type PrimitiveRecord = Record<string, boolean | number | string>
 
 const awrap = (fn: ExpressAsyncHandler) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -51,14 +49,20 @@ const fetchHandler = awrap(async function (
   const fullHistory = body.full === true
   const requestLimit = body.requestLimit ?? 10
   const contractAddresses = (body.contractAddresses ?? [])
-    .filter((x) => x)
     .map(addressMaybe)
+    .filter((x) => x)
 
   try {
     for (const contractAddress of contractAddresses) {
-      await collectActivities({ contractAddress, fullHistory, requestLimit })
+      await collectActivities({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        contractAddress: contractAddress!,
+        fullHistory,
+        requestLimit,
+      })
     }
   } catch (err) {
+    // console.error(err)
     log.error(err, 'Error fetching listings in fetchHandler')
     res.status(500).json({ success: false, message: 'Internal server error' })
     return
@@ -81,11 +85,11 @@ app.post(
   awrap(async function (req: Request, res: Response): Promise<void> {
     const body = req.body as {
       contractAddress: string
-      description: string
+      description?: string
       disabled?: boolean
     }
     const contractAddress = addressMaybe(body.contractAddress)
-    const { disabled = false, description } = body
+    const { disabled = false, description = '' } = body
 
     if (!contractAddress) {
       const msg = 'Invalid contractAddress'
@@ -160,13 +164,19 @@ app.get(
       type: activityType,
       //since,
       limit = 20,
-      sortField = 'pointsSum',
+      sortField = 'score',
       sortDirection = 'desc',
     } = req.query
 
-    const where: PrimitiveRecord = {}
+    const where: Record<string, unknown> = {
+      points: {
+        [Op.gt]: 0,
+      },
+    }
     if (contractAddress) {
-      where.contractAddress = contractAddress as string
+      where.contractAddress = {
+        [Op.in]: (contractAddress as string).split(',').map((a) => hex2buf(a)),
+      }
     }
     if (activityType) {
       where.type = activityType as string
@@ -183,8 +193,7 @@ app.get(
         where,
         attributes: [
           'walletAddress',
-          [sequelize.fn('SUM', sequelize.col('points')), 'pointsSum'],
-          [sequelize.fn('SUM', sequelize.col('price')), 'priceSum'],
+          [sequelize.literal('SUM(multiplier * points)'), 'score'],
         ],
         group: ['walletAddress'],
         order: [
@@ -195,9 +204,8 @@ app.get(
 
       const leaders: Leader[] = activities.map((item) => {
         const leader: Leader = {
-          walletAddress: buf2hex(item.walletAddress),
-          pointsSum: item.getDataValue('pointsSum') as number,
-          priceSum: item.getDataValue('priceSum') as number,
+          walletAddress: address(item.walletAddress),
+          score: item.getDataValue('score') as number,
         }
         return leader
       })

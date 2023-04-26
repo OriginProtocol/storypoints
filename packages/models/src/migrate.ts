@@ -2,7 +2,8 @@ import { logger } from '@storypoints/utils'
 import { Sequelize } from 'sequelize'
 import { SequelizeStorage, Umzug } from 'umzug'
 
-import * as migration20230406150645CreateActivity from './migrations/20230406150645-create-activity'
+import * as createActivity from './migrations/20230406150645-create-activity'
+import * as createCollection from './migrations/20230424200130-create-collection'
 import { QueryInterface, sequelize } from './models'
 
 interface MigrationModule {
@@ -11,7 +12,8 @@ interface MigrationModule {
 }
 
 const migrations = {
-  ['20230406150645-create-activity.js']: migration20230406150645CreateActivity,
+  ['20230406150645-create-activity.js']: createActivity,
+  ['20230424200130-create-collection.js']: createCollection,
 }
 
 const umzug = new Umzug({

@@ -16,7 +16,7 @@ export interface ICollection {
   disabled?: boolean
 }
 
-@Table({ tableName: 'activity' })
+@Table({ tableName: 'collection' })
 export default class Collection extends Model implements ICollection {
   @AutoIncrement
   @PrimaryKey
@@ -27,7 +27,10 @@ export default class Collection extends Model implements ICollection {
   @Column(DataType.BOOLEAN)
   disabled: boolean
 
-  @Column(DataType.BLOB)
+  @Column({
+    type: DataType.BLOB,
+    field: 'contract_address',
+  })
   contractAddress: Buffer
 
   @Column(DataType.STRING)

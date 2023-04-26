@@ -1,5 +1,5 @@
 import { IActivity } from '@storypoints/models'
-import { buf2hex, logger } from '@storypoints/utils'
+import { buf2hex, isDir, logger } from '@storypoints/utils'
 import fs from 'fs/promises'
 import path from 'path'
 
@@ -8,21 +8,26 @@ import { IRule, RuleContext, RuleFunction } from './types'
 const log = logger.child({ app: 'rules' })
 let RULES_CACHE: IRule[] = []
 
-/// Load rules from an S3 bucket
-async function loadBucketRules(): Promise<IRule[]> {
-  // TODO
-  await Promise.resolve()
-  return []
-}
-
 /// Load rules for scoring that are part of this module
 async function loadModuleRules(): Promise<IRule[]> {
   const rulesDir = path.resolve(__dirname, 'rules')
-  const ruleFiles = await fs.readdir(rulesDir)
-  const rules = []
+  const secretRulesDir = path.resolve(__dirname, 'secret')
+  const publicRuleFiles = (await fs.readdir(rulesDir)).map((f) =>
+    path.join(rulesDir, f)
+  )
 
-  for (const rule of ruleFiles) {
-    const rulePath = path.join(rulesDir, rule)
+  let secretRuleFiles = []
+  if (await isDir(secretRulesDir)) {
+    secretRuleFiles = (await fs.readdir(secretRulesDir)).map((f) =>
+      path.join(secretRulesDir, f)
+    )
+  }
+  const ruleFiles = publicRuleFiles
+    .concat(secretRuleFiles)
+    .filter((f) => f.endsWith('.js') || f.endsWith('.ts'))
+
+  const rules = []
+  for (const rulePath of ruleFiles) {
     log.debug(`Importing rule @ ${rulePath}`)
     const ruleModule = (await import(rulePath)) as {
       name: string
@@ -44,7 +49,7 @@ async function loadModuleRules(): Promise<IRule[]> {
 /// Load rules for scoring
 export async function loadRules(): Promise<IRule[]> {
   if (RULES_CACHE.length < 1) {
-    RULES_CACHE = (await loadModuleRules()).concat(await loadBucketRules())
+    RULES_CACHE = await loadModuleRules()
   }
   return RULES_CACHE
 }
