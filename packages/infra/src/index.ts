@@ -79,6 +79,9 @@ export class StoryPoints extends Stack {
     const reservoirApiKey = secrets
       .secretValueFromJson('reservoirApiKey')
       .unsafeUnwrap()
+    const jsonRpcProviderUrl = secrets
+      .secretValueFromJson('jsonRpcProviderUrl')
+      .unsafeUnwrap()
 
     const privateSubnets = []
     if (!vpc.privateSubnets.length) {
@@ -363,6 +366,11 @@ export class StoryPoints extends Stack {
         namespace: 'aws:elasticbeanstalk:application:environment',
         optionName: 'RESERVOIR_API_KEY',
         value: reservoirApiKey,
+      },
+      {
+        namespace: 'aws:elasticbeanstalk:application:environment',
+        optionName: 'JSON_PRC_PROVIDER',
+        value: jsonRpcProviderUrl,
       },
     ]
     const webSettings = [
