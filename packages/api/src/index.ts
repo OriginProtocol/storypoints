@@ -176,7 +176,7 @@ app.get(
       req.query.contractAddress?.toString() ?? ''
     )
     const activityType = inhand.string(req.query.type?.toString() ?? '')
-    const limit = inhand.integer(req.query.limit)
+    const limit = inhand.integer(req.query.limit, 100)
     const sortField = inhand.stringOptions(
       req.query.sortField?.toString() ?? '',
       ['score', 'walletAddress'],
@@ -188,7 +188,7 @@ app.get(
       'desc'
     )
     const start = inhand.date(req.query.start, new Date(0))
-    const end = inhand.date(req.query.start, new Date())
+    const end = inhand.date(req.query.end, new Date())
 
     const where: Record<string, unknown> = {
       points: {
@@ -206,14 +206,8 @@ app.get(
     if (activityType) {
       where.type = activityType
     }
-    /*if (since) {
-      where.timestamp = {
-        [Op.gte]: since,
-      }
-    }*/
 
     try {
-      //await Activity.findAll()
       const activities = await Activity.findAll({
         where,
         attributes: [
