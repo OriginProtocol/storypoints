@@ -19,6 +19,7 @@ import {
 import { E_18, getOGN } from '@storypoints/utils/eth'
 import { ethToUSD } from '@storypoints/utils/exchangerate'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
+import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 
 import * as inhand from './inhand'
@@ -47,6 +48,7 @@ const findBoost = (amount: bigint): number => {
   return 1.0
 }
 
+app.use(cors())
 app.use(express.json())
 
 function apiKeyMiddleware(
