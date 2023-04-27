@@ -193,6 +193,7 @@ app.get(
     const end = inhand.date(req.query.end, new Date())
 
     const where: Record<string, unknown> = {
+      valid: true,
       points: {
         [Op.gt]: 0,
       },
