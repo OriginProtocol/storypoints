@@ -515,7 +515,7 @@ new StoryPoints(app, 'prod', {
 })*/
 new StoryPoints(app, 'sandbox', {
   domainName: 'sandbox.ogn-review.net', // TODO: make this a CDK param?
-  enableTestRules: true,
+  enableTestRules: false,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: 'us-east-2',

@@ -91,6 +91,7 @@ app.post(
   awrap(async function (req: Request, res: Response): Promise<void> {
     const body = req.body as {
       contractAddress?: string
+      tokenId?: string
       type?: string
       price?: string
       royalty?: string
@@ -103,15 +104,24 @@ app.post(
       ['ask', 'bid', 'ask_cancel', 'bid_cancel', 'sale'],
       ''
     )
+    const tokenId = inhand.bigintMaybe(body.tokenId)
     const price = inhand.bigint(body.price, BigInt(0))
     const royalty = inhand.bigint(body.royalty, BigInt(0))
     const currency = inhand.address(body.currency, '')
-    const expires = inhand.integer(body.expires, +new Date())
+    const expires = inhand.integer(body.expires, unixnow())
 
     log.debug(
       { contractAddress, type, price, royalty, currency, expires },
       '/simulate'
     )
+
+    if (type === 'ask' && tokenId === null) {
+      res.status(500).json({
+        success: false,
+        message: 'tokenId must be provided for ask orders',
+      })
+      return
+    }
 
     const priceUSD = await ethToUSD(price)
 
@@ -127,6 +137,7 @@ app.post(
       priceUSD: priceUSD,
       currency: hex2buf(currency),
       activityBlob: {
+        tokenId: tokenId?.toString() ?? undefined,
         order: {
           source: {
             domain: 'story.xyz',
@@ -460,7 +471,6 @@ app.post(
         [Op.between]: [startStamp, endStamp],
       },
     }
-    console.log('where:', where)
 
     const activities = await Activity.findAll({
       where,
@@ -497,6 +507,7 @@ app.post(
 )
 
 app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
+  // console.error(err)
   log.error(err, 'Error in express middleware')
   res.status(500).send('Something broke!')
   next()

@@ -69,6 +69,20 @@ export function bigint(v: unknown, defaultValue: bigint): bigint {
   return defaultValue
 }
 
+export function bigintMaybe(
+  v: unknown,
+  defaultValue?: bigint | null
+): bigint | null {
+  if (['string', 'number', 'bigint', 'boolean'].includes(typeof v)) {
+    try {
+      return BigInt(v as string | number | bigint | boolean)
+    } catch {
+      /* pass */
+    }
+  }
+  return defaultValue ?? null
+}
+
 export function date(v: unknown, defaultValue: Date): Date {
   if (['string', 'number'].includes(typeof v)) {
     try {

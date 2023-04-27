@@ -20,3 +20,8 @@ export function hex2buf(v?: string): Buffer {
 export function buf2hex(v: Buffer): string {
   return add0x(v.toString('hex'))
 }
+
+/// Compare two buffers for equality. Returns false if any are undefined
+export function bufeq(a: Buffer | undefined, b: Buffer | undefined): boolean {
+  return !!b && a?.compare(b) === 0
+}

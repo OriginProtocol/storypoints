@@ -66,6 +66,8 @@ export async function scoreActivity(activity: IActivity): Promise<RuleContext> {
   for (const rule of rules) {
     ctx = await rule.run(ctx, activity)
 
+    log.debug(ctx, `Rule ${rule.name} executed`)
+
     if (!ctx.valid) {
       log.debug(
         `Rules ${rule.name} has invalidated activity ${

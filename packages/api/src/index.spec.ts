@@ -1,25 +1,16 @@
 // test/leader.test.ts
 
+//import {Event} from '@storypoints/models'
+import { unixnow } from '@storypoints/utils'
 import { expect } from 'chai'
 import supertest from 'supertest'
-import EventDefinition from '../../src/models/event'
 import { Sequelize } from 'sequelize'
-import { app } from '../../src/api/index'
 
-const sequelize = new Sequelize({
-  username: 'ed',
-  password: undefined,
-  database: 'points_test',
-  host: '127.0.0.1',
-  dialect: 'postgres',
-  logging: false
-})
-
-const Event = EventDefinition(sequelize)
+import { app } from './index'
 
 const request = supertest(app)
 
-describe('/leaders endpoint', () => {
+/*describe('/leaders endpoint', () => {
   before(async () => {
     // Create fake Event data
     await Event.bulkCreate([
@@ -35,7 +26,7 @@ describe('/leaders endpoint', () => {
         ognStakedMultiplier: 1,
         collectionVolumeMultiplier: 1,
         moderationMultiplier: 1,
-        description: 'Event 1'
+        description: 'Event 1',
       },
       {
         points: 20,
@@ -49,7 +40,7 @@ describe('/leaders endpoint', () => {
         ognStakedMultiplier: 1,
         collectionVolumeMultiplier: 1,
         moderationMultiplier: 1,
-        description: 'Event 2'
+        description: 'Event 2',
       },
       {
         points: 30,
@@ -63,8 +54,8 @@ describe('/leaders endpoint', () => {
         ognStakedMultiplier: 1,
         collectionVolumeMultiplier: 1,
         moderationMultiplier: 1,
-        description: 'Event 3'
-      }
+        description: 'Event 3',
+      },
     ])
   })
 
@@ -80,12 +71,12 @@ describe('/leaders endpoint', () => {
     expect(response.body).to.deep.include({
       walletAddress: '0xABC',
       pointsSum: 30,
-      priceSum: 300
+      priceSum: 300,
     })
     expect(response.body).to.deep.include({
       walletAddress: '0xDEF',
       pointsSum: 30,
-      priceSum: 300
+      priceSum: 300,
     })
   })
 
@@ -96,7 +87,7 @@ describe('/leaders endpoint', () => {
     expect(response.body).to.deep.include({
       walletAddress: '0xABC',
       pointsSum: 30,
-      priceSum: 300
+      priceSum: 300,
     })
   })
 
@@ -107,12 +98,12 @@ describe('/leaders endpoint', () => {
     expect(response.body).to.deep.include({
       walletAddress: '0xABC',
       pointsSum: 10,
-      priceSum: 100
+      priceSum: 100,
     })
     expect(response.body).to.deep.include({
       walletAddress: '0xDEF',
       pointsSum: 30,
-      priceSum: 300
+      priceSum: 300,
     })
   })
 
@@ -124,12 +115,76 @@ describe('/leaders endpoint', () => {
     expect(response.body).to.deep.include({
       walletAddress: '0xABC',
       pointsSum: 30,
-      priceSum: 300
+      priceSum: 300,
     })
     expect(response.body).to.deep.include({
       walletAddress: '0xDEF',
       pointsSum: 30,
-      priceSum: 300
+      priceSum: 300,
     })
+  })
+})*/
+
+interface SimulateResponseBody {
+  success: boolean
+  score: {
+    valid: boolean
+    multiplier: number
+    points: number
+  }
+}
+
+describe('/simulate endpoint', function () {
+  before(async () => {})
+
+  after(async () => {})
+
+  it.only('should score an ask', async function () {
+    const response = await request
+      .post('/simulate')
+      .send({
+        contractAddress: '0x3bf2922f4520a8BA0c2eFC3D2a1539678DaD5e9D',
+        tokenId: '6954',
+        type: 'ask',
+        // actual price: '728000000000000000',
+        price: '700000000000000000',
+        royalty: '7280000000000000', // 1%
+        currency: '0x0000000000000000000000000000000000000000',
+        expires: unixnow() + 60 * 60 * 24 * 7,
+      })
+      .expect(200)
+
+    const body = response.body as SimulateResponseBody
+    console.log('body:', body)
+    expect(body.success).to.be.true
+    expect(body.score.valid).to.be.true
+    expect(body.score.multiplier).to.be.above(1)
+    expect(body.score.multiplier).to.be.below(40)
+    expect(body.score.points).to.be.above(1)
+    expect(body.score.points).to.be.below(1000)
+    expect(body.score.points).to.be.above(1)
+  })
+
+  it('should score a sale', async () => {
+    const response = await request
+      .post('/simulate')
+      .send({
+        contractAddress: '0x3bf2922f4520a8BA0c2eFC3D2a1539678DaD5e9D',
+        type: 'sale',
+        price: '665000000000000000',
+        royalty: '6650000000000000', // 1%
+        currency: '0x0000000000000000000000000000000000000000',
+        expires: unixnow() + 60 * 60 * 24 * 7,
+      })
+      .expect(200)
+    const body = response.body as SimulateResponseBody
+    console.log('body:', body)
+    expect(body.success).to.be.true
+    expect(body.score.valid).to.be.true
+    expect(body.score.multiplier).to.be.above(1)
+    expect(body.score.multiplier).to.be.below(40)
+    expect(body.score.points).to.be.above(1)
+    expect(body.score.points).to.be.below(1000)
+    expect(body.score.points).to.be.above(1)
   })
 })

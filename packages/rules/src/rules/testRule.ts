@@ -2,8 +2,8 @@ import { IActivity } from '@storypoints/models'
 
 import { RuleContext } from '@storypoints/rules'
 
-const isTest =
-  process.env.NODE_ENV === 'test' || process.env.ENABLE_TEST_RULES === 'true'
+// process.env.NODE_ENV === 'test' ||
+const isTest = process.env.ENABLE_TEST_RULES === 'true'
 
 // Test rule
 export const name = 'testRule'
