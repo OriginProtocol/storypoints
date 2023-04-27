@@ -32,6 +32,10 @@ import {
   ServicePrincipal,
 } from 'aws-cdk-lib/aws-iam'
 import { Runtime } from 'aws-cdk-lib/aws-lambda'
+import {
+  Certificate,
+  CertificateValidation,
+} from 'aws-cdk-lib/aws-certificatemanager'
 import { DatabaseInstance } from 'aws-cdk-lib/aws-rds'
 import { Asset } from 'aws-cdk-lib/aws-s3-assets'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
@@ -47,6 +51,7 @@ import {
 import ApiBundler from './apiBundler'
 
 interface StoryPointsProps extends StackProps {
+  domainName: string
   enableTestRules?: boolean
   instanceType?: string
   removalPolicy?: RemovalPolicy
@@ -59,7 +64,7 @@ export class StoryPoints extends Stack {
   constructor(scope: App, id: string, props: StoryPointsProps) {
     super(scope, id, props)
     const { region } = Stack.of(this)
-    const { enableTestRules, instanceType, removalPolicy } = props
+    const { domainName, enableTestRules, instanceType, removalPolicy } = props
     const context = scope.node.tryGetContext(id) as {
       configSecretsArn: string
       vpc: string
@@ -140,6 +145,11 @@ export class StoryPoints extends Stack {
       Peer.anyIpv4(),
       Port.tcp(80),
       `Allow incoming traffic over port 80`,
+    )
+    webSg.addIngressRule(
+      Peer.anyIpv4(),
+      Port.tcp(443),
+      `Allow incoming traffic over port 443`,
     )
 
     const dbSg = new SecurityGroup(this, `${appName}-db-sg`, {
@@ -296,6 +306,20 @@ export class StoryPoints extends Stack {
       value: appBundle.bucket.bucketName,
     })
 
+    // if this was a known zone
+    let zone
+    /*const zone = new route53.HostedZone(this, 'HostedZone', {
+      zoneName: 'example.com',
+    });*/
+
+    // TODO: This is setup for a DNS zone outside of this account/env. Should
+    // add the option to use a known zone for validation to keep this package
+    // usable by others.
+    const cert = new Certificate(this, `${appName}-certificate`, {
+      domainName,
+      validation: CertificateValidation.fromDns(zone),
+    })
+
     const appVersion = new elasticbeanstalk.CfnApplicationVersion(
       this,
       `${appName}-version`,
@@ -387,19 +411,29 @@ export class StoryPoints extends Stack {
         value: ebSubnets,
       },
       {
-        namespace: 'aws:elbv2:listener:443',
+        namespace: 'aws:elb:listener:443',
         optionName: 'ListenerEnabled',
         value: 'true',
       },
       {
-        namespace: 'aws:elbv2:listener:443',
-        optionName: 'SSLPolicy',
-        value: 'ELBSecurityPolicy-FS-1-2-Res-2020-10',
+        namespace: 'aws:elb:listener:443',
+        optionName: 'ListenerProtocol',
+        value: 'HTTPS',
       },
       {
-        namespace: 'aws:elbv2:listener:443',
-        optionName: 'Protocol',
-        value: 'HTTPS',
+        namespace: 'aws:elb:listener:443',
+        optionName: 'InstancePort',
+        value: '80',
+      },
+      {
+        namespace: 'aws:elb:listener:443',
+        optionName: 'InstanceProtocol',
+        value: 'HTTP',
+      },
+      {
+        namespace: 'aws:elb:listener:443',
+        optionName: 'SSLCertificateId',
+        value: cert.certificateArn,
       },
       {
         namespace: 'aws:elasticbeanstalk:application:environment',
@@ -480,6 +514,7 @@ new StoryPoints(app, 'prod', {
   removalPolicy: RemovalPolicy.DESTROY,
 })*/
 new StoryPoints(app, 'sandbox', {
+  domainName: 'sandbox.ogn-review.net', // TODO: make this a CDK param?
   enableTestRules: true,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
