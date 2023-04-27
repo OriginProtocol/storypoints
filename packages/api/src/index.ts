@@ -253,6 +253,8 @@ app.get(
       ''
     )
     const activityType = inhand.string(req.query.type?.toString() ?? '')
+    const start = inhand.date(req.query.start, new Date(0))
+    const end = inhand.date(req.query.end, new Date())
 
     if (!walletAddress) {
       res.status(400).json({ error: 'Missing walletAddress' })
@@ -261,6 +263,9 @@ app.get(
 
     const where: Record<string, unknown> = {
       walletAddress: hex2buf(walletAddress),
+      timestamp: {
+        [Op.between]: [start, end],
+      },
     }
     if (contractAddresses.length) {
       where.contractAddress = {
