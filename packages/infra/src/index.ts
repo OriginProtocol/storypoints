@@ -82,6 +82,7 @@ export class StoryPoints extends Stack {
     const jsonRpcProviderUrl = secrets
       .secretValueFromJson('jsonRpcProviderUrl')
       .unsafeUnwrap()
+    const apiKey = secrets.secretValueFromJson('apiKey').unsafeUnwrap()
 
     const privateSubnets = []
     if (!vpc.privateSubnets.length) {
@@ -404,6 +405,11 @@ export class StoryPoints extends Stack {
         namespace: 'aws:elasticbeanstalk:application:environment',
         optionName: 'WORKER_QUEUE_URL',
         value: workerQueue.queueUrl,
+      },
+      {
+        namespace: 'aws:elasticbeanstalk:application:environment',
+        optionName: 'API_KEY',
+        value: apiKey,
       },
     ]
     const workerSettings = [
