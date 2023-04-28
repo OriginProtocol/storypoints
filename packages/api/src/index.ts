@@ -1,5 +1,5 @@
 // nonce: 25
-import { collectActivities } from '@storypoints/ingest'
+import { collectActivities, updateWallets } from '@storypoints/ingest'
 import {
   Activity,
   Collection,
@@ -332,45 +332,58 @@ app.get(
   })
 )
 
-const fetchHandler = awrap(async function (
+const workerHandler = awrap(async function (
   req: Request,
   res: Response
 ): Promise<void> {
   const body = req.body as {
+    task?: string
     full?: boolean
     contractAddresses?: string[]
     requestLimit?: number
   }
-  const fullHistory = body.full === true
-  const requestLimit = body.requestLimit ?? 10
-  const contractAddresses = (body.contractAddresses ?? [])
-    .map(addressMaybe)
-    .filter((x) => x)
 
-  try {
-    for (const contractAddress of contractAddresses) {
-      await collectActivities({
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        contractAddress: contractAddress!,
-        fullHistory,
-        requestLimit,
-      })
+  if (body.task === 'wallet') {
+    try {
+      await updateWallets()
+    } catch (err) {
+      // console.error(err)
+      log.error(err, 'Error updating wallets')
+      res.status(500).json({ success: false, message: 'Internal server error' })
+      return
     }
-  } catch (err) {
-    // console.error(err)
-    log.error(err, 'Error fetching listings in fetchHandler')
-    res.status(500).json({ success: false, message: 'Internal server error' })
-    return
+  } else {
+    const fullHistory = body.full === true
+    const requestLimit = body.requestLimit ?? 10
+    const contractAddresses = (body.contractAddresses ?? [])
+      .map(addressMaybe)
+      .filter((x) => x)
+
+    try {
+      for (const contractAddress of contractAddresses) {
+        await collectActivities({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          contractAddress: contractAddress!,
+          fullHistory,
+          requestLimit,
+        })
+      }
+    } catch (err) {
+      // console.error(err)
+      log.error(err, 'Error fetching listings in fetchHandler')
+      res.status(500).json({ success: false, message: 'Internal server error' })
+      return
+    }
   }
 
   res.status(200).json({ success: true })
 })
 
 if (isWorker) {
-  app.post('/', fetchHandler)
+  app.post('/', workerHandler)
 } else if (!isProdEnv) {
   // Conditional local runner
-  app.post('/fetch', fetchHandler)
+  app.post('/work', workerHandler)
 }
 
 // Add a collection
@@ -423,7 +436,11 @@ app.post(
   '/trigger',
   apiKeyMiddleware,
   awrap(async function (req: Request, res: Response): Promise<void> {
-    const body = req.body as { full?: boolean; contractAddresses?: string[] }
+    const body = req.body as {
+      task?: string
+      full?: boolean
+      contractAddresses?: string[]
+    }
     const fullHistory = body.full === true
     const contractAddresses = (body.contractAddresses ?? [])
       .filter((x) => x)
@@ -442,6 +459,7 @@ app.post(
       new SendMessageCommand({
         QueueUrl: WORKER_QUEUE_URL,
         MessageBody: JSON.stringify({
+          task: body.task,
           contractAddresses,
           fullHistory,
         }),

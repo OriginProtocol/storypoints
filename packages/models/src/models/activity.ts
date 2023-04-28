@@ -6,16 +6,21 @@ import {
 import {
   AutoIncrement,
   BeforeCreate,
+  BelongsTo,
   Column,
   CreatedAt,
   DataType,
   Default,
+  ForeignKey,
   //HasMany,
+  HasOne,
   Model,
   PrimaryKey,
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
+
+import Wallet from './wallet'
 
 export interface IActivity {
   activityHash?: Buffer
@@ -124,6 +129,12 @@ export default class Activity extends Model implements IActivity {
   @UpdatedAt
   @Column({ type: DataType.DATE, field: 'updated_at' })
   updatedAt: Date
+
+  @BelongsTo(() => Wallet, {
+    constraints: false,
+    foreignKey: 'wallet_address',
+  })
+  wallet: Wallet
 
   @BeforeCreate
   static hashActivity(act: Activity) {

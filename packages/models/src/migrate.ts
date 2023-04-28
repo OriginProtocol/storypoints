@@ -4,6 +4,7 @@ import { SequelizeStorage, Umzug } from 'umzug'
 
 import * as createActivity from './migrations/20230406150645-create-activity'
 import * as createCollection from './migrations/20230424200130-create-collection'
+import * as createWallet from './migrations/20230428184115-create-wallet'
 import { QueryInterface, sequelize } from './models'
 
 interface MigrationModule {
@@ -14,6 +15,7 @@ interface MigrationModule {
 const migrations = {
   ['20230406150645-create-activity.js']: createActivity,
   ['20230424200130-create-collection.js']: createCollection,
+  ['20230428184115-create-wallet.js']: createWallet,
 }
 
 const umzug = new Umzug({
