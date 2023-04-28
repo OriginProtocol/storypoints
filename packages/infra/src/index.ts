@@ -403,6 +403,11 @@ export class StoryPoints extends Stack {
         optionName: 'JSON_PRC_PROVIDER',
         value: jsonRpcProviderUrl,
       },
+      {
+        namespace: 'aws:elasticbeanstalk:application:environment',
+        optionName: 'ENABLE_TEST_RULES',
+        value: enableTestRules ? 'true' : 'false',
+      },
     ]
     const webSettings = [
       {
@@ -458,14 +463,6 @@ export class StoryPoints extends Stack {
         value: 'true',
       },
     ]
-
-    if (enableTestRules) {
-      commonSettings.push({
-        namespace: 'aws:elasticbeanstalk:application:environment',
-        optionName: 'ENABLE_TEST_RULES',
-        value: 'true',
-      })
-    }
 
     const ebEnv = new elasticbeanstalk.CfnEnvironment(
       this,
