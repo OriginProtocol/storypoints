@@ -186,7 +186,7 @@ app.get(
   '/leaders',
   awrap(async function (req: Request, res: Response): Promise<void> {
     const contractAddresses = inhand.addresses(
-      req.query.contractAddress?.toString() ?? ''
+      req.query.contractAddresses?.toString() ?? ''
     )
     const activityType = inhand.string(req.query.type?.toString() ?? '')
     const limit = inhand.integer(req.query.limit, 100)
@@ -203,6 +203,7 @@ app.get(
     const start = inhand.date(req.query.start, new Date(0))
     const end = inhand.date(req.query.end, new Date())
 
+    const latestWhere: Record<string, unknown> = {}
     const where: Record<string, unknown> = {
       valid: true,
       points: {
@@ -216,12 +217,22 @@ app.get(
       where.contractAddress = {
         [Op.in]: contractAddresses.map((a) => hex2buf(a)),
       }
+      latestWhere.contractAddress = {
+        [Op.in]: contractAddresses.map((a) => hex2buf(a)),
+      }
     }
     if (activityType) {
       where.type = activityType
     }
 
     try {
+      const latest = await Activity.findOne({
+        attributes: ['timestamp'],
+        where: latestWhere,
+        order: [['timestamp', 'DESC']],
+        limit: 1,
+      })
+
       const activities = await Activity.findAll({
         where,
         attributes: [
@@ -243,7 +254,10 @@ app.get(
         return leader
       })
 
-      res.status(200).json(leaders)
+      res.status(200).json({
+        timestamp: latest?.timestamp ? +latest?.timestamp : 0,
+        leaders,
+      })
       return
     } catch (error) {
       log.error(error, 'Error while fetching leaders')
