@@ -5,6 +5,7 @@ import {
   Collection,
   IActivity,
   Op,
+  Wallet,
   sequelize,
 } from '@storypoints/models'
 import { scoreActivity } from '@storypoints/rules'
@@ -68,6 +69,7 @@ interface Leader {
   walletAddress: string
   name: string
   score?: number
+  boost?: number
 }
 
 type ExpressAsyncHandler = (
@@ -239,7 +241,19 @@ app.get(
           'walletAddress',
           [sequelize.literal('SUM(multiplier * points)'), 'score'],
         ],
-        group: ['walletAddress'],
+        include: [
+          {
+            attributes: ['ensName', 'ognStake'],
+            model: Wallet,
+            required: false,
+          },
+        ],
+        group: [
+          'walletAddress',
+          'wallet.address',
+          'wallet.ens_name',
+          'wallet.ogn_stake',
+        ],
         order: [[sortField, sortDirection]],
         limit,
       })
@@ -247,8 +261,10 @@ app.get(
       const leaders: Leader[] = activities.map((item) => {
         const leader: Leader = {
           walletAddress: address(item.walletAddress),
-          // TODO: ENS
-          name: '',
+          name: item.wallet.ensName,
+          boost: item.wallet.ognStake
+            ? findBoost(BigInt(item.wallet.ognStake))
+            : 0,
           score: item.getDataValue('score') as number,
         }
         return leader
@@ -445,13 +461,6 @@ app.post(
     const contractAddresses = (body.contractAddresses ?? [])
       .filter((x) => x)
       .map(addressMaybe)
-
-    if (!contractAddresses.length) {
-      const msg = 'Invalid contractAddress'
-      log.warn({ contractAddresses }, msg)
-      res.status(400).json({ error: msg })
-      return
-    }
 
     const { APP_NAME = 'storypoints', WORKER_QUEUE_URL } = process.env
     if (!WORKER_QUEUE_URL) throw new Error(`WORKER_QUEUE_URL is not defined`)
