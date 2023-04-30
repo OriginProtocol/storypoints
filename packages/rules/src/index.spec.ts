@@ -1,8 +1,8 @@
 import { hex2buf } from '@storypoints/utils'
+import { RuleContext } from '@storypoints/types'
 import { expect } from 'chai'
 
 import { loadRules, scoreActivity } from './index'
-import { RuleContext } from './types'
 
 describe('@storypoints/rules', () => {
   beforeEach(() => {})

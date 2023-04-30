@@ -1,4 +1,4 @@
-import { IActivity } from '@storypoints/models'
+import { IActivity } from './interface'
 
 export interface RuleContext {
   valid: boolean // If false, points are invalidated and effectively 0

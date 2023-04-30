@@ -1,3 +1,4 @@
+import { ICollection } from '@storypoints/types'
 import {
   AutoIncrement,
   Column,
@@ -9,12 +10,6 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript'
-
-export interface ICollection {
-  contractAddress: Buffer
-  description?: string
-  disabled?: boolean
-}
 
 @Table({ tableName: 'collection' })
 export default class Collection extends Model implements ICollection {

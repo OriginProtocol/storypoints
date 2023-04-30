@@ -1,15 +1,8 @@
-import { buf2hex, hex2buf, sha256 } from '@storypoints/utils'
+import { IWallet } from '@storypoints/types'
 import {
-  ReservoirCollectionActivity,
-  ReservoirOrder,
-} from '@storypoints/utils/reservoir'
-import {
-  AutoIncrement,
-  BeforeCreate,
   Column,
   CreatedAt,
   DataType,
-  Default,
   HasMany,
   Model,
   PrimaryKey,
@@ -18,12 +11,6 @@ import {
 } from 'sequelize-typescript'
 
 import Activity from './activity'
-
-export interface IWallet {
-  address: Buffer
-  ensName?: string
-  ognStake?: string
-}
 
 @Table({ tableName: 'wallet' })
 export default class Wallet extends Model implements IWallet {

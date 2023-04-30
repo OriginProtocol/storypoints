@@ -3,12 +3,12 @@ import { collectActivities, updateWallets } from '@storypoints/ingest'
 import {
   Activity,
   Collection,
-  IActivity,
   Op,
   Wallet,
   sequelize,
 } from '@storypoints/models'
 import { scoreActivity } from '@storypoints/rules'
+import { IActivity } from '@storypoints/types'
 import {
   address,
   addressMaybe,

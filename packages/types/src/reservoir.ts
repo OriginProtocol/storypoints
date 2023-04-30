@@ -7,24 +7,24 @@ export interface ReservoirActivityResponse {
 }
 
 //Response type for https://docs.reservoir.tools/reference/getsalesv4
-export type SalesResponse = {
+export interface SalesResponse {
   sales: Sale[]
   continuation: string
 }
 
-export type Currency = {
+export interface Currency {
   contract: string
   name: string
   symbol: string
   decimals: number
 }
 
-export type Collection = {
+export interface Collection {
   id: string | null
   name: string | null
 }
 
-export type Token = {
+export interface Token {
   contract: string
   tokenId: string
   name: string | null
@@ -32,19 +32,19 @@ export type Token = {
   collection: Collection
 }
 
-export type PriceAmount = {
+export interface PriceAmount {
   raw: string
   decimal: number
   usd: number
   native: number
 }
 
-export type Price = {
+export interface Price {
   currency: Currency
   amount: PriceAmount
 }
 
-export type Sale = {
+export interface Sale {
   id?: string
   saleId?: string
   token?: Token

@@ -1,8 +1,10 @@
 import { buf2hex, hex2buf, sha256 } from '@storypoints/utils'
 import {
+  IActivity,
+  IActivityContext,
   ReservoirCollectionActivity,
   ReservoirOrder,
-} from '@storypoints/utils/reservoir'
+} from '@storypoints/types'
 import {
   AutoIncrement,
   BeforeCreate,
@@ -21,23 +23,6 @@ import {
 } from 'sequelize-typescript'
 
 import Wallet from './wallet'
-
-export interface IActivity {
-  activityHash?: Buffer
-  activityBlob: ReservoirCollectionActivity
-  contractAddress: Buffer
-  currency?: Buffer
-  multiplier: number
-  description?: string
-  orderBlob?: ReservoirOrder
-  points: number
-  price?: string
-  priceUSD?: number
-  timestamp: Date
-  type: string
-  walletAddress?: Buffer
-  valid?: boolean
-}
 
 /// Hash an Activity to create a unique ident
 export function hashActivity(act: IActivity) {
@@ -111,6 +96,12 @@ export default class Activity extends Model implements IActivity {
   description: string
 
   @Column({
+    type: DataType.BLOB,
+    field: 'reservoir_order_id',
+  })
+  reservoirOrderId?: Buffer
+
+  @Column({
     type: DataType.JSONB,
     field: 'activity_blob',
   })
@@ -121,6 +112,12 @@ export default class Activity extends Model implements IActivity {
     field: 'order_blob',
   })
   orderBlob?: ReservoirOrder
+
+  @Column({
+    type: DataType.JSONB,
+    field: 'context_blob',
+  })
+  contextBlob?: IActivityContext
 
   @CreatedAt
   @Column({ type: DataType.DATE, field: 'created_at' })

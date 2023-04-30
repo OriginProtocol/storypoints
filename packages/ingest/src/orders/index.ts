@@ -2,12 +2,8 @@
  * Fetches order data Reservoir
  */
 
-import { IActivity } from '@storypoints/models'
-import {
-  fetchFromReservoir,
-  GetOrderResponse,
-  ReservoirOrder,
-} from '@storypoints/utils/reservoir'
+import { fetchFromReservoir } from '@storypoints/utils/reservoir'
+import { GetOrderResponse, IActivity, ReservoirOrder } from '@storypoints/types'
 import { logger } from '@storypoints/utils'
 
 const log = logger.child({ app: 'ingest', module: 'orders' })
@@ -64,6 +60,7 @@ export async function addOrderBlob(activity: IActivity): Promise<IActivity> {
     }
   }
 
+  activity.reservoirOrderId = orderId
   activity.orderBlob = order
 
   return activity

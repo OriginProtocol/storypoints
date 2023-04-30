@@ -1,8 +1,8 @@
 import { Op, QueryInterface } from 'sequelize'
 import { Sequelize } from 'sequelize-typescript'
-import Activity, { IActivity, hashActivity } from './activity'
-import Collection, { ICollection } from './collection'
-import Wallet, { IWallet } from './wallet'
+import Activity, { hashActivity } from './activity'
+import Collection from './collection'
+import Wallet from './wallet'
 
 const {
   POSTGRES_DB = 'storypoints',
@@ -42,9 +42,6 @@ export {
   sequelize,
   hashActivity,
   Activity,
-  IActivity,
   Collection,
-  ICollection,
-  IWallet,
   Wallet,
 }

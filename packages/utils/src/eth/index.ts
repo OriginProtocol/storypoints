@@ -4,6 +4,10 @@ let ogn: Contract | undefined
 let provider: JsonRpcProvider | undefined
 
 export const E_18 = BigInt('1000000000000000000')
+export const ZERO_ADDRESS = Buffer.from(
+  '0000000000000000000000000000000000000000',
+  'hex'
+)
 
 export function getProvider(): JsonRpcProvider {
   if (!process.env.JSON_PRC_PROVIDER)

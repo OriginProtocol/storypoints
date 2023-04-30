@@ -1,11 +1,17 @@
 /**
- * Fetches newly-created listings from Reservoir, creates Activity rows as
+ * Fetches newly-created activities from Reservoir, creates Activity rows as
  * appropriate
  */
-import { Activity, IActivity, hashActivity } from '@storypoints/models'
+import { Activity, hashActivity } from '@storypoints/models'
 import { scoreActivity } from '@storypoints/rules'
 import {
+  GetCollectionActivityResponse,
+  IActivity,
+  ReservoirCollectionActivity,
+} from '@storypoints/types'
+import {
   dateToUnix,
+  getOGN,
   hex2buf,
   buf2hex,
   logger,
@@ -13,8 +19,8 @@ import {
 } from '@storypoints/utils'
 import {
   fetchFromReservoir,
-  GetCollectionActivityResponse,
-  ReservoirCollectionActivity,
+  getCheapestOrder,
+  getCollectionFloor,
 } from '@storypoints/utils/reservoir'
 import { URLSearchParams } from 'url'
 
@@ -154,6 +160,7 @@ export async function collectActivities({
   }
 
   let continuationToken
+  let insertCount = 0
   let requestCount = 0
   do {
     const faProps = {
@@ -183,13 +190,51 @@ export async function collectActivities({
         await addOrderBlob(actProps)
       }
 
+      let cheapestOrder, collectionFloorPrice, userOgnStake
+      if (['ask', 'bid'].includes(actProps.type)) {
+        if (actProps.activityBlob.tokenId) {
+          const cheapest = await getCheapestOrder(
+            actProps.contractAddress,
+            actProps.activityBlob.tokenId
+          )
+
+          if (!cheapest || hex2buf(cheapest.id) === actProps.reservoirOrderId) {
+            cheapestOrder = true
+          } else {
+            cheapestOrder = false
+          }
+        } else {
+          cheapestOrder = false
+        }
+
+        collectionFloorPrice = await getCollectionFloor(
+          actProps.contractAddress
+        )
+      }
+
+      if (!actProps.type.endsWith('_cancel')) {
+        const ogn = getOGN()
+        const stake = actProps.walletAddress
+          ? ((await ogn.balanceOf(buf2hex(actProps.walletAddress))) as bigint)
+          : 0n
+        userOgnStake = stake.toString()
+      }
+
+      actProps.contextBlob = {
+        cheapestOrder,
+        collectionFloorPrice,
+        userOgnStake,
+      }
+
       const score = await scoreActivity(actProps)
       actProps.valid = score.valid
       actProps.points = score.points
       actProps.multiplier = score.multiplier
 
-      log.info(`upserting activity ${buf2hex(actProps.activityHash)}`)
-      await upsertActivites([actProps])
+      const [, created] = await insertActivity(actProps)
+      if (created) {
+        insertCount += 1
+      }
     }
 
     if (result.isDone) {
@@ -200,24 +245,28 @@ export async function collectActivities({
     log.debug(`requestCount: ${requestCount}`)
     log.debug(`requestLimit: ${requestLimit}`)
   } while (continuationToken && requestCount < requestLimit)
+
+  log.info(
+    `Finished collecting ${insertCount} activities with ${requestCount} requests`
+  )
 }
 
-export async function upsertActivites(activities: IActivity[]) {
-  log.debug(`Upserting ${activities.length} activities`)
-  for (const item of activities) {
-    let activity = await Activity.findOne({
-      where: { activityHash: item.activityHash },
-    })
+export async function insertActivity(
+  actProps: IActivity
+): Promise<[Activity, boolean]> {
+  const [activity, created] = await Activity.findOrCreate({
+    where: { activityHash: actProps.activityHash },
+    defaults: {
+      ...actProps,
+    },
+  })
 
-    if (activity) {
-      await activity.update({ ...item })
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      log.debug(`Updated activity ${buf2hex(activity.activityHash!)}`)
-    } else {
-      activity = await Activity.create({ ...item })
-      // if activityHash is undefined, something broke, so ignoring
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      log.debug(`Created activity ${buf2hex(activity.activityHash!)}`)
-    }
+  const hexHash = actProps.activityHash ? buf2hex(actProps.activityHash) : 'UNK'
+  if (created) {
+    log.info(`Inserted activity ${hexHash}`)
+  } else {
+    log.debug(`Activity ${hexHash} already exists`)
   }
+
+  return [activity, created]
 }

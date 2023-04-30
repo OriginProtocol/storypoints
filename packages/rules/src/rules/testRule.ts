@@ -1,6 +1,4 @@
-import { IActivity } from '@storypoints/models'
-
-import { RuleContext } from '@storypoints/rules'
+import { IActivity, RuleContext } from '@storypoints/types'
 
 // process.env.NODE_ENV === 'test' ||
 const isTest = process.env.ENABLE_TEST_RULES === 'true'

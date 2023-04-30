@@ -1,9 +1,7 @@
-import { IActivity } from '@storypoints/models'
+import { IActivity, IRule, RuleContext, RuleFunction } from '@storypoints/types'
 import { buf2hex, isDir, logger } from '@storypoints/utils'
 import fs from 'fs/promises'
 import path from 'path'
-
-import { IRule, RuleContext, RuleFunction } from './types'
 
 const log = logger.child({ app: 'rules' })
 let RULES_CACHE: IRule[] = []
