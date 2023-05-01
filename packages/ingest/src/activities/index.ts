@@ -179,6 +179,9 @@ export async function collectActivities({
     for (const item of result.activities) {
       const actProps = transalateActivity(item)
       actProps.activityHash = hashActivity(actProps)
+      actProps.reservoirOrderId = actProps.activityBlob.order?.id
+        ? hex2buf(actProps.activityBlob.order.id)
+        : undefined
 
       // TODO: For now, we're only adding order blobs to native activities and
       // sales for efficiency raisins.  Wonder if we could make this lazy on

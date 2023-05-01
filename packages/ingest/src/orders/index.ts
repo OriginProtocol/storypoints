@@ -60,7 +60,6 @@ export async function addOrderBlob(activity: IActivity): Promise<IActivity> {
     }
   }
 
-  activity.reservoirOrderId = orderId
   activity.orderBlob = order
 
   return activity
