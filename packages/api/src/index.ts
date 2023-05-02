@@ -303,6 +303,7 @@ app.get(
     }
 
     const where: Record<string, unknown> = {
+      valid: true,
       walletAddress: hex2buf(walletAddress),
       timestamp: {
         [Op.between]: [start, end],
@@ -487,9 +488,10 @@ app.post(
     const body = req.body as {
       start?: number
       end?: number
+      type?: string
       contractAddresses?: string[]
     }
-    const { start, end } = body
+    const { start, end, type } = body
     const contractAddresses = (body.contractAddresses ?? [])
       .filter((x) => x)
       .map(addressMaybe)
@@ -504,13 +506,17 @@ app.post(
     const startStamp = start ? new Date(start) : 0
     const endStamp = end ? new Date(end) : new Date()
 
-    const where = {
+    const where: Record<string, unknown> = {
       contractAddress: {
         [Op.in]: contractAddresses.map((a) => hex2buf(a)),
       },
       timestamp: {
         [Op.between]: [startStamp, endStamp],
       },
+    }
+
+    if (type) {
+      where.type = type
     }
 
     const activities = await Activity.findAll({
