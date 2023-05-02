@@ -364,6 +364,16 @@ export class StoryPoints extends Stack {
         value: ebSubnets,
       },
       {
+        namespace: 'aws:elasticbeanstalk:cloudwatch:logs',
+        optionName: 'StreamLogs',
+        value: 'true',
+      },
+      {
+        namespace: 'aws:elasticbeanstalk:cloudwatch:logs',
+        optionName: 'RetentionInDays',
+        value: '30',
+      },
+      {
         namespace: 'aws:elasticbeanstalk:application:environment',
         optionName: 'APP_NAME',
         value: appName,
