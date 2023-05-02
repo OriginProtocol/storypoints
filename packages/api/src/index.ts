@@ -1,4 +1,4 @@
-// nonce: 26
+// nonce: 27
 import { collectActivities, updateWallets } from '@storypoints/ingest'
 import {
   Activity,
@@ -359,6 +359,15 @@ const workerHandler = awrap(async function (
     contractAddresses?: string[]
     requestLimit?: number
   }
+
+  log.info(
+    {
+      contractAddresses: body.contractAddresses,
+      full: body.full,
+      requestLimit: body.requestLimit,
+    },
+    `Received task: ${body.task ?? 'default'}`
+  )
 
   if (body.task === 'wallet') {
     try {
