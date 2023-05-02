@@ -2,7 +2,7 @@
  * Fetches newly-created activities from Reservoir, creates Activity rows as
  * appropriate
  */
-import { Activity, hashActivity } from '@storypoints/models'
+import { Activity, Op, hashActivity } from '@storypoints/models'
 import { scoreActivity } from '@storypoints/rules'
 import {
   GetCollectionActivityResponse,
@@ -188,6 +188,7 @@ export async function collectActivities({
       // the model somehow?
       if (
         actProps.type === 'sale' ||
+        actProps.type.endsWith('_cancel') ||
         actProps.activityBlob.order?.source?.domain === 'story.xyz'
       ) {
         await addOrderBlob(actProps)
@@ -229,10 +230,31 @@ export async function collectActivities({
         userOgnStake,
       }
 
-      const score = await scoreActivity(actProps)
-      actProps.valid = score.valid
-      actProps.points = score.points
-      actProps.multiplier = score.multiplier
+      if (actProps.type.endsWith('_cancel')) {
+        const cancelledOrder = await Activity.findOne({
+          where: {
+            reservoirOrderId: actProps.reservoirOrderId,
+            type: {
+              [Op.in]: ['ask', 'bid'],
+            },
+          },
+        })
+
+        // If we know about the order...
+        if (cancelledOrder) {
+          actProps.valid = cancelledOrder.valid
+          actProps.points = cancelledOrder.points
+          // negate its points
+          actProps.multiplier = cancelledOrder.multiplier * -1
+        } else {
+          actProps.valid = false
+        }
+      } else {
+        const score = await scoreActivity(actProps)
+        actProps.valid = score.valid
+        actProps.points = score.points
+        actProps.multiplier = score.multiplier
+      }
 
       const [, created] = await insertActivity(actProps)
       if (created) {
