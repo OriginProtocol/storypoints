@@ -194,9 +194,8 @@ export async function collectActivities({
         await addOrderBlob(actProps)
       }
 
-      // The user getting points for the sale should be the taker in the case
-      // of an ask.  Asks getting filled have fromAddress set to maker.
-      if (actProps.type === 'sale' && actProps.orderBlob?.side === 'sell') {
+      // The user getting points for the sale should be the recipient (toAddress)
+      if (actProps.type === 'sale') {
         actProps.walletAddress = hex2buf(actProps.activityBlob.toAddress)
       }
 
