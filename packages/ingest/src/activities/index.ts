@@ -194,6 +194,12 @@ export async function collectActivities({
         await addOrderBlob(actProps)
       }
 
+      // The user getting points for the sale should be the taker in the case
+      // of an ask.  Asks getting filled have fromAddress set to maker.
+      if (actProps.type === 'sale' && actProps.orderBlob?.side === 'sell') {
+        actProps.walletAddress = hex2buf(actProps.activityBlob.toAddress)
+      }
+
       let cheapestOrder, collectionFloorPrice, userOgnStake
       if (['ask', 'bid'].includes(actProps.type)) {
         if (actProps.activityBlob.tokenId) {
