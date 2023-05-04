@@ -278,6 +278,7 @@ app.get(
           ensName: string
           ognStake: string
         }
+        getDataValue: (key: string) => unknown
       }[]
 
       const leaders: Leader[] = activities.map((item) => {
@@ -287,7 +288,7 @@ app.get(
           boost: item.wallet?.ognStake
             ? findBoost(BigInt(item.wallet.ognStake))
             : 0,
-          score: item.score,
+          score: item.getDataValue('score') as number,
         }
         return leader
       })
