@@ -10,6 +10,7 @@ export interface Adjustment {
 
 export interface RuleContext {
   valid: boolean // If false, points are invalidated and effectively 0
+  reason?: string
   points: number // The amount of points awarded by the rules
   multiplier: number // The points multiplier
   adjustments: Adjustment[]

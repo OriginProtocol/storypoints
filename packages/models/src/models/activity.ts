@@ -132,6 +132,9 @@ export default class Activity extends Model implements IActivity {
   @Column({ type: DataType.DATE, field: 'updated_at' })
   updatedAt: Date
 
+  @Column(DataType.STRING)
+  reason?: string
+
   @BelongsTo(() => Wallet, {
     constraints: false,
     foreignKey: 'wallet_address',

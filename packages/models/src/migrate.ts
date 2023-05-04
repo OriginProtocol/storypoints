@@ -8,6 +8,7 @@ import * as createWallet from './migrations/20230428184115-create-wallet'
 import * as addContextBlob from './migrations/20230429180333-add-activity-context'
 import * as addReservoirOrderId from './migrations/20230502021736-add-reservoir-order-id'
 import * as addAdjustmentMultiplier from './migrations/20230504182340-add-adjustment-multiplier'
+import * as addReason from './migrations/20230504202005-add-reason'
 import { QueryInterface, sequelize } from './models'
 
 interface MigrationModule {
@@ -22,6 +23,7 @@ const migrations = {
   ['20230429180333-add-activity-context.js']: addContextBlob,
   ['20230502021736-add-reservoir-order-id.js']: addReservoirOrderId,
   ['20230504182340-add-adjustment-multiplier.js']: addAdjustmentMultiplier,
+  ['20230504202005-add-reason.js']: addReason,
 }
 
 const umzug = new Umzug({

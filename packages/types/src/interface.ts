@@ -24,6 +24,7 @@ export interface IActivity {
   price?: string
   priceUSD?: number
   reservoirOrderId?: Buffer
+  reason?: string
   timestamp: Date
   type: ActivityType
   walletAddress?: Buffer

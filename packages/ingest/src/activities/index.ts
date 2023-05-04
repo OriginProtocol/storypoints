@@ -260,8 +260,9 @@ export async function collectActivities({
       } else {
         const score = await scoreActivity(actProps)
         actProps.valid = score.valid
-        actProps.points = score.points
         actProps.multiplier = score.multiplier
+        actProps.points = score.points
+        actProps.reason = score.reason
 
         if (score.adjustments.length) {
           await makeAdjustments(score.adjustments)
