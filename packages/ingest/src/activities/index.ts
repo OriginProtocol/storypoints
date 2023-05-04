@@ -5,6 +5,8 @@
 import { Activity, Op, hashActivity } from '@storypoints/models'
 import { scoreActivity } from '@storypoints/rules'
 import {
+  ActivityType,
+  Adjustment,
   GetCollectionActivityResponse,
   IActivity,
   ReservoirCollectionActivity,
@@ -27,7 +29,7 @@ import { URLSearchParams } from 'url'
 import { addOrderBlob } from '../orders'
 
 const log = logger.child({ app: 'ingest', module: 'listings' })
-const WANTED_RESERVOIR_TYPES = [
+const WANTED_RESERVOIR_TYPES: ActivityType[] = [
   'ask',
   'ask_cancel',
   'bid',
@@ -119,7 +121,7 @@ const transalateActivity = (
   price: activity.price?.amount?.raw,
   priceUSD: activity.price?.amount?.usd,
   timestamp: activity.timestamp ? unixToJSDate(activity.timestamp) : new Date(),
-  type: activity.type ?? '',
+  type: (activity.type ?? 'unknown') as ActivityType,
   activityBlob: activity,
   walletAddress: activity.fromAddress
     ? hex2buf(activity.fromAddress)
@@ -194,8 +196,9 @@ export async function collectActivities({
         await addOrderBlob(actProps)
       }
 
-      // The user getting points for the sale should be the recipient (toAddress)
-      if (actProps.type === 'sale') {
+      // The user getting points for the sale should be the taker in the case
+      // of a bid.  Bids getting filled have fromAddress set to maker.
+      if (actProps.type === 'sale' && actProps.orderBlob?.side === 'buy') {
         actProps.walletAddress = hex2buf(actProps.activityBlob.toAddress)
       }
 
@@ -259,6 +262,10 @@ export async function collectActivities({
         actProps.valid = score.valid
         actProps.points = score.points
         actProps.multiplier = score.multiplier
+
+        if (score.adjustments.length) {
+          await makeAdjustments(score.adjustments)
+        }
       }
 
       const [, created] = await insertActivity(actProps)
@@ -299,4 +306,36 @@ export async function insertActivity(
   }
 
   return [activity, created]
+}
+
+export async function makeAdjustments(
+  adjustments: Adjustment[]
+): Promise<void> {
+  for (const adjust of adjustments) {
+    const acts = await Activity.findAll({
+      where: {
+        type: adjust.type,
+        reservoirOrderId: adjust.reservoirOrderId,
+      },
+    })
+
+    if (!acts.length) {
+      log.debug(adjust, 'No activities found matching adjustment criterea')
+      continue
+    }
+
+    for (const act of acts) {
+      if (adjust.multiplier) {
+        log.info(
+          `Adjusting activity (${
+            act.activityHash ? buf2hex(act.activityHash) : 'UNK'
+          }) by ${adjust.multiplier}`
+        )
+        await act.update({
+          adjustmentMultiplier:
+            (act.adjustmentMultiplier || 1) * adjust.multiplier,
+        })
+      }
+    }
+  }
 }

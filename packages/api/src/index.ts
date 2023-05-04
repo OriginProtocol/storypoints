@@ -1,4 +1,4 @@
-// nonce: 27
+// nonce: 30
 import { collectActivities, updateWallets } from '@storypoints/ingest'
 import {
   Activity,
@@ -8,7 +8,7 @@ import {
   sequelize,
 } from '@storypoints/models'
 import { scoreActivity } from '@storypoints/rules'
-import { IActivity } from '@storypoints/types'
+import { ActivityType, IActivity } from '@storypoints/types'
 import {
   address,
   addressMaybe,
@@ -101,11 +101,13 @@ app.post(
       expires: number
     }
     const contractAddress = inhand.address(body.contractAddress, '')
-    const type = inhand.stringOptions(
-      body.type,
-      ['ask', 'bid', 'ask_cancel', 'bid_cancel', 'sale'],
-      ''
-    )
+    const type = inhand.stringOptions<ActivityType | undefined>(body.type, [
+      'ask',
+      'bid',
+      'ask_cancel',
+      'bid_cancel',
+      'sale',
+    ])
     const tokenId = inhand.bigintMaybe(body.tokenId)
     const price = inhand.bigint(body.price, BigInt(0))
     const royalty = inhand.bigint(body.royalty, BigInt(0))
@@ -117,8 +119,16 @@ app.post(
       '/simulate'
     )
 
+    if (!type) {
+      res.status(400).json({
+        success: false,
+        message: 'type must be provided',
+      })
+      return
+    }
+
     if (type === 'ask' && tokenId === null) {
-      res.status(500).json({
+      res.status(400).json({
         success: false,
         message: 'tokenId must be provided for ask orders',
       })
@@ -235,11 +245,16 @@ app.get(
         limit: 1,
       })
 
-      const activities = await Activity.findAll({
+      const activities = (await Activity.findAll({
         where,
         attributes: [
           'walletAddress',
-          [sequelize.literal('SUM(multiplier * points)'), 'score'],
+          [
+            sequelize.literal(
+              'SUM(multiplier * points * adjustment_multiplier)'
+            ),
+            'score',
+          ],
         ],
         include: [
           {
@@ -256,22 +271,29 @@ app.get(
         ],
         order: [[sortField, sortDirection]],
         limit,
-      })
+      })) as unknown as {
+        walletAddress: string
+        score: number
+        wallet?: {
+          ensName: string
+          ognStake: string
+        }
+      }[]
 
       const leaders: Leader[] = activities.map((item) => {
         const leader: Leader = {
           walletAddress: address(item.walletAddress),
-          name: item.wallet.ensName,
-          boost: item.wallet.ognStake
+          name: item.wallet?.ensName ?? '',
+          boost: item.wallet?.ognStake
             ? findBoost(BigInt(item.wallet.ognStake))
             : 0,
-          score: item.getDataValue('score') as number,
+          score: item.score,
         }
         return leader
       })
 
       res.status(200).json({
-        timestamp: latest?.timestamp ? +latest?.timestamp : 0,
+        timestamp: latest?.timestamp ? +latest.timestamp : 0,
         leaders,
       })
       return

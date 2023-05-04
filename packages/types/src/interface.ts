@@ -1,5 +1,9 @@
 import { Price } from './base'
-import { ReservoirCollectionActivity, ReservoirOrder } from './reservoir'
+import {
+  ActivityType,
+  ReservoirCollectionActivity,
+  ReservoirOrder,
+} from './reservoir'
 
 export interface IActivityContext {
   cheapestOrder?: boolean
@@ -21,7 +25,7 @@ export interface IActivity {
   priceUSD?: number
   reservoirOrderId?: Buffer
   timestamp: Date
-  type: string
+  type: ActivityType
   walletAddress?: Buffer
   valid?: boolean
 }

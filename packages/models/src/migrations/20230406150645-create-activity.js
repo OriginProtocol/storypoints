@@ -47,6 +47,7 @@ module.exports = {
       multiplier: {
         type: Sequelize.FLOAT,
         field: 'multiplier',
+        defaultValue: 1,
       },
       description: {
         type: Sequelize.STRING,

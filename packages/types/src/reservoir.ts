@@ -1,5 +1,15 @@
 import { definitions, paths } from '@reservoir0x/reservoir-sdk'
 
+export type ActivityType =
+  | 'ask'
+  | 'ask_cancel'
+  | 'bid'
+  | 'bid_cancel'
+  | 'mint'
+  | 'sale'
+  | 'transfer'
+  | 'unknown'
+
 //Response type for https://docs.reservoir.tools/reference/getcollectionsactivityv6
 export interface ReservoirActivityResponse {
   activities: ReservoirActivity[]
@@ -39,7 +49,7 @@ export interface PriceAmount {
   native: number
 }
 
-export interface Price {
+export interface ReservoirPrice {
   currency: Currency
   amount: PriceAmount
 }
@@ -61,7 +71,7 @@ export interface Sale {
   logIndex?: number
   batchIndex?: number
   timestamp?: number
-  price?: Price
+  price?: ReservoirPrice
   washTradingScore?: number
   paidFullRoyalty?: boolean
   feeBreakdown?: FeeBreakdown[]
@@ -91,7 +101,7 @@ export interface ReservoirActivity {
   type?: string
   fromAddress: string
   toAddress?: string | null
-  price?: Price
+  price?: ReservoirPrice
   amount?: number
   timestamp?: number
   createdAt?: string

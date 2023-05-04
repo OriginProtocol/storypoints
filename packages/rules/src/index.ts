@@ -59,6 +59,7 @@ export async function scoreActivity(activity: IActivity): Promise<RuleContext> {
     valid: true,
     multiplier: 1,
     points: 0,
+    adjustments: [],
   }
 
   for (const rule of rules) {

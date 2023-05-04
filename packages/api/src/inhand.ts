@@ -46,16 +46,18 @@ export function string(v: string, defaultValue?: string): string {
   return (v || defaultValue) ?? ''
 }
 
-export function stringOptions(
+export function stringOptions<T = string>(
   v: unknown,
   options: string[],
-  defaultValue: string
-): string {
-  return typeof v === 'string'
-    ? options.includes(v)
-      ? v
+  defaultValue?: T
+): T {
+  return (
+    typeof v === 'string'
+      ? options.includes(v)
+        ? v
+        : defaultValue
       : defaultValue
-    : defaultValue
+  ) as T
 }
 
 export function bigint(v: unknown, defaultValue: bigint): bigint {

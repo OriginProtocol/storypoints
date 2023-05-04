@@ -1,5 +1,6 @@
 import { buf2hex, hex2buf, sha256 } from '@storypoints/utils'
 import {
+  ActivityType,
   IActivity,
   IActivityContext,
   ReservoirCollectionActivity,
@@ -65,7 +66,7 @@ export default class Activity extends Model implements IActivity {
   priceUSD: number
 
   @Column(DataType.STRING)
-  type: string
+  type: ActivityType
 
   @Column({
     type: DataType.BLOB,
@@ -91,6 +92,10 @@ export default class Activity extends Model implements IActivity {
   @Default(1)
   @Column({ type: DataType.FLOAT, field: 'multiplier' })
   multiplier: number
+
+  @Default(1)
+  @Column({ type: DataType.FLOAT, field: 'adjustment_multiplier' })
+  adjustmentMultiplier: number
 
   @Column(DataType.STRING)
   description: string

@@ -1,3 +1,4 @@
+// nonce: 1
 // Lambda handler for running DB migrations
 import { migrate /*undo*/ } from '@storypoints/models'
 
