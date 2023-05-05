@@ -14,6 +14,7 @@ import {
 import {
   dateToUnix,
   getOGN,
+  getProvider,
   hex2buf,
   buf2hex,
   logger,
@@ -161,6 +162,8 @@ export async function collectActivities({
     requestLimit = 1000
   }
 
+  const provider = getProvider()
+
   let continuationToken
   let insertCount = 0
   let requestCount = 0
@@ -200,6 +203,15 @@ export async function collectActivities({
       // of a bid.  Bids getting filled have fromAddress set to maker.
       if (actProps.type === 'sale' && actProps.orderBlob?.side === 'buy') {
         actProps.walletAddress = hex2buf(actProps.activityBlob.toAddress)
+      }
+
+      // If there's an L1 tx involved, let's store the tx
+      if (
+        (actProps.type === 'sale' || actProps.type.endsWith('_cancel')) &&
+        actProps.activityBlob.txHash
+      ) {
+        const tx = await provider.getTransaction(actProps.activityBlob.txHash)
+        if (tx) actProps.transactionBlob = tx
       }
 
       let cheapestOrder, collectionFloorPrice, userOgnStake

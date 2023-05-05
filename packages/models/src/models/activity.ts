@@ -6,6 +6,7 @@ import {
   ReservoirCollectionActivity,
   ReservoirOrder,
 } from '@storypoints/types'
+import { TransactionResponse } from 'ethers'
 import {
   AutoIncrement,
   BeforeCreate,
@@ -123,6 +124,12 @@ export default class Activity extends Model implements IActivity {
     field: 'context_blob',
   })
   contextBlob?: IActivityContext
+
+  @Column({
+    type: DataType.JSONB,
+    field: 'transaction_blob',
+  })
+  transactionBlob?: TransactionResponse
 
   @CreatedAt
   @Column({ type: DataType.DATE, field: 'created_at' })

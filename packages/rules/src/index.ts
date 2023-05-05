@@ -73,7 +73,6 @@ export async function scoreActivity(activity: IActivity): Promise<RuleContext> {
           activity.activityHash ? buf2hex(activity.activityHash) : 'UNK'
         }`
       )
-      break
     }
   }
 

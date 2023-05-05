@@ -9,6 +9,7 @@ import * as addContextBlob from './migrations/20230429180333-add-activity-contex
 import * as addReservoirOrderId from './migrations/20230502021736-add-reservoir-order-id'
 import * as addAdjustmentMultiplier from './migrations/20230504182340-add-adjustment-multiplier'
 import * as addReason from './migrations/20230504202005-add-reason'
+import * as addTxBlob from './migrations/20230505211318-add-tx-blob'
 import { QueryInterface, sequelize } from './models'
 
 interface MigrationModule {
@@ -24,6 +25,7 @@ const migrations = {
   ['20230502021736-add-reservoir-order-id.js']: addReservoirOrderId,
   ['20230504182340-add-adjustment-multiplier.js']: addAdjustmentMultiplier,
   ['20230504202005-add-reason.js']: addReason,
+  ['20230505211318-add-tx-blob.js']: addTxBlob,
 }
 
 const umzug = new Umzug({

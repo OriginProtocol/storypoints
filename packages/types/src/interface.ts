@@ -1,3 +1,4 @@
+import { TransactionResponse } from 'ethers'
 import { Price } from './base'
 import {
   ActivityType,
@@ -26,6 +27,7 @@ export interface IActivity {
   reservoirOrderId?: Buffer
   reason?: string
   timestamp: Date
+  transactionBlob?: TransactionResponse
   type: ActivityType
   walletAddress?: Buffer
   valid?: boolean
