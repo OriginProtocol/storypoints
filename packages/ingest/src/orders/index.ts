@@ -13,7 +13,7 @@ export async function fetchOrderAsk(
   orderId: string
 ): Promise<ReservoirOrder | undefined> {
   const params = new URLSearchParams({
-    id: orderId,
+    ids: orderId,
   })
   const url = `/orders/asks/v4?${params.toString()}`
 
@@ -31,7 +31,7 @@ export async function fetchOrderBid(
   orderId: string
 ): Promise<ReservoirOrder | undefined> {
   const params = new URLSearchParams({
-    id: orderId,
+    ids: orderId,
   })
   const url = `/orders/bids/v4?${params.toString()}`
 
