@@ -180,8 +180,12 @@ export async function collectActivities({
 
     continuationToken = result.continuationToken
     requestCount += 1
+    const resultCount = result.activities.length
+      ? result.activities.length - 1
+      : 0
 
-    for (const item of result.activities) {
+    for (let i = resultCount; i >= 0; i--) {
+      const item = result.activities[i]
       const actProps = transalateActivity(item)
       actProps.activityHash = hashActivity(actProps)
       actProps.reservoirOrderId = actProps.activityBlob.order?.id
@@ -200,8 +204,8 @@ export async function collectActivities({
       }
 
       // The user getting points for the sale should be the taker in the case
-      // of a bid.  Bids getting filled have fromAddress set to maker.
-      if (actProps.type === 'sale' && actProps.orderBlob?.side === 'buy') {
+      // of a ask. Asks getting filled have fromAddress set to maker.
+      if (actProps.type === 'sale' && actProps.orderBlob?.side === 'sell') {
         actProps.walletAddress = hex2buf(actProps.activityBlob.toAddress)
       }
 
