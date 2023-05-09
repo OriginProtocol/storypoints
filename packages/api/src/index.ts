@@ -8,17 +8,14 @@ import {
   sequelize,
 } from '@storypoints/models'
 import { scoreActivity } from '@storypoints/rules'
-import { ActivityType, IActivity } from '@storypoints/types'
 import {
   address,
   addressMaybe,
   buf2hex,
   hex2buf,
   logger,
-  unixnow,
 } from '@storypoints/utils'
 import { E_18, getOGN } from '@storypoints/utils/eth'
-import { ethToUSD } from '@storypoints/utils/exchangerate'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
@@ -87,112 +84,6 @@ const awrap = (fn: ExpressAsyncHandler) => {
 app.get('/', (req: Request, res: Response) => {
   res.status(200).json({ message: 'Hello World!' })
 })
-
-app.post(
-  '/simulate',
-  awrap(async function (req: Request, res: Response): Promise<void> {
-    const body = req.body as {
-      contractAddress?: string
-      tokenId?: string
-      type?: string
-      price?: string
-      royalty?: string
-      currency?: string
-      expires: number
-    }
-    const contractAddress = inhand.address(body.contractAddress, '')
-    const type = inhand.stringOptions<ActivityType | undefined>(body.type, [
-      'ask',
-      'bid',
-      'ask_cancel',
-      'bid_cancel',
-      'sale',
-    ])
-    const tokenId = inhand.bigintMaybe(body.tokenId)
-    const price = inhand.bigint(body.price, BigInt(0))
-    const royalty = inhand.bigint(body.royalty, BigInt(0))
-    const currency = inhand.address(body.currency, '')
-    const expires = inhand.integer(body.expires, unixnow())
-
-    log.debug(
-      { contractAddress, type, price, royalty, currency, expires },
-      '/simulate'
-    )
-
-    if (!type) {
-      res.status(400).json({
-        success: false,
-        message: 'type must be provided',
-      })
-      return
-    }
-
-    if (type === 'ask' && tokenId === null) {
-      res.status(400).json({
-        success: false,
-        message: 'tokenId must be provided for ask orders',
-      })
-      return
-    }
-
-    const priceUSD = await ethToUSD(price)
-
-    // Speculative IActivity details that rules are looking for
-    const unow = unixnow()
-    const act: IActivity = {
-      multiplier: 1,
-      points: 0,
-      timestamp: new Date(),
-      contractAddress: hex2buf(contractAddress),
-      type,
-      price: price.toString(),
-      priceUSD: priceUSD,
-      currency: hex2buf(currency),
-      activityBlob: {
-        tokenId: tokenId?.toString() ?? undefined,
-        order: {
-          source: {
-            domain: 'story.xyz',
-          },
-        },
-      },
-      orderBlob: {
-        id: '0xdeadbeef',
-        kind: type,
-        side: 'sell',
-        tokenSetId: '',
-        tokenSetSchemaHash: '',
-        maker: '',
-        taker: '',
-        price: {
-          currency: {
-            contract: currency,
-          },
-          amount: {
-            raw: price.toString(),
-            //usd:
-          },
-        },
-        feeBreakdown: [
-          {
-            kind: 'royalty',
-            //recipeient: '',
-            bps: Number((royalty * 10000n) / price).valueOf(),
-          },
-        ],
-        validFrom: unow,
-        validUntil: expires,
-        expiration: 0,
-        createdAt: unow.toString(),
-        updatedAt: unow.toString(),
-      },
-    }
-
-    const score = await scoreActivity(act)
-
-    res.status(200).json({ success: true, score })
-  })
-)
 
 app.get(
   '/leaders',
@@ -436,7 +327,6 @@ if (isWorker) {
 }
 
 // Add a collection
-// TODO: Needs auth
 app.post(
   '/collection',
   apiKeyMiddleware,
@@ -513,7 +403,7 @@ app.post(
   })
 )
 
-app.post(
+/*app.post(
   '/rescore',
   apiKeyMiddleware,
   awrap(async function (req: Request, res: Response): Promise<void> {
@@ -583,7 +473,7 @@ app.post(
 
     res.status(200).json({ success: true })
   })
-)
+)*/
 
 app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
   // console.error(err)
