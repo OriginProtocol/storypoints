@@ -1,12 +1,21 @@
-import { buf2hex, hex2buf, sha256 } from '@storypoints/utils'
+import {
+  address,
+  addressMaybe,
+  buf2hex,
+  hex2buf,
+  sha256,
+} from '@storypoints/utils'
 import {
   ActivityType,
   IActivity,
   IActivityContext,
+  JSONObject,
+  JSONValue,
   ReservoirCollectionActivity,
   ReservoirOrder,
 } from '@storypoints/types'
 import { TransactionResponse } from 'ethers'
+import get from 'lodash/get'
 import {
   AutoIncrement,
   BeforeCreate,
@@ -151,5 +160,48 @@ export default class Activity extends Model implements IActivity {
   @BeforeCreate
   static hashActivity(act: Activity) {
     act.activityHash = hashActivity(act)
+  }
+
+  // TODO: can/should toJSON() be overridden?
+  json(): JSONObject {
+    const contextBlob: JSONValue = this.contextBlob
+      ? {
+          cheapestOrder: this.contextBlob.cheapestOrder,
+          collectionFloorPrice: {
+            amount: this.contextBlob.collectionFloorPrice?.amount,
+            amountUSD: this.contextBlob.collectionFloorPrice?.amountUSD,
+            currency: addressMaybe(
+              this.contextBlob.collectionFloorPrice?.currency
+            ),
+          },
+          userOgnStake: this.contextBlob.userOgnStake,
+        }
+      : {}
+
+    return {
+      ...(get(this, [
+        'id',
+        'valid',
+        'points',
+        'price',
+        'priceUSD',
+        'type',
+        'timestamp',
+        'multiplier',
+        'adjustmentMultiplier',
+        'description',
+        'createdAt',
+        'updatedAt',
+        'reason',
+      ]) as JSONObject),
+      activityHash: this.activityHash ? buf2hex(this.activityHash) : null,
+      contextBlob,
+      contractAddress: address(this.contractAddress),
+      currency: address(this.currency),
+      reservoirOrderId: this.reservoirOrderId
+        ? buf2hex(this.reservoirOrderId)
+        : null,
+      walletAddress: address(this.walletAddress),
+    }
   }
 }

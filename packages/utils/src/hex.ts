@@ -25,3 +25,14 @@ export function buf2hex(v: Buffer): string {
 export function bufeq(a: Buffer | undefined, b: Buffer | undefined): boolean {
   return !!b && a?.compare(b) === 0
 }
+
+// Coax a given value to a hex string
+export function toHex(v: Buffer | string): string {
+  if (v instanceof Buffer) {
+    return buf2hex(v)
+  } else if (typeof v === 'string' && remove0x(v).match(/[A-Fa-f0-9]+/)) {
+    return add0x(v)
+  }
+
+  return '0x'
+}

@@ -1,11 +1,11 @@
 // Ethereum address utilities
 import { getAddress } from '@ethersproject/address'
 
-import { buf2hex } from './hex'
+import { toHex } from './hex'
 
 /// Normalize string address
 export function address(v: Buffer | string): string {
-  return getAddress(v instanceof Buffer ? buf2hex(v) : v)
+  return getAddress(toHex(v))
 }
 
 /// Check if string or buffer is an address

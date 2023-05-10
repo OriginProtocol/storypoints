@@ -16,11 +16,16 @@ import {
   logger,
 } from '@storypoints/utils'
 import { E_18, getOGN } from '@storypoints/utils/eth'
+import { IActivity } from '@storypoints/types'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 
 import * as inhand from './inhand'
+
+type Primitive = string | number | boolean | null
+type JSONValue = Primitive | Primitive[] | Record<string, Primitive>
+type JSONObject = Record<string, JSONValue>
 
 const sqs = new SQSClient({ region: process.env.AWS_REGION })
 const log = logger.child({
@@ -257,6 +262,58 @@ app.get(
       return
     } catch (error) {
       log.error(error, 'Error while getting user details')
+      res.status(500).json({ error: 'Internal Server Error' })
+      return
+    }
+  })
+)
+
+app.get(
+  '/activity',
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    const contractAddresses = inhand.addresses(
+      req.query.contractAddress?.toString() ?? ''
+    )
+    const walletAddress = inhand.address(
+      req.query.walletAddress?.toString() ?? '',
+      ''
+    )
+    const activityType = inhand.string(req.query.type?.toString() ?? '')
+    const start = inhand.date(req.query.start, new Date(0))
+    const end = inhand.date(req.query.end, new Date())
+
+    if (!walletAddress) {
+      res.status(400).json({ error: 'Missing walletAddress' })
+      return
+    }
+
+    const where: Record<string, unknown> = {
+      walletAddress: hex2buf(walletAddress),
+      timestamp: {
+        [Op.between]: [start, end],
+      },
+    }
+    if (contractAddresses.length) {
+      where.contractAddress = {
+        [Op.in]: contractAddresses.map((a) => hex2buf(a)),
+      }
+    }
+    if (activityType) {
+      where.type = activityType
+    }
+
+    try {
+      const activityRes = await Activity.findAll({
+        where,
+        limit: 100,
+      })
+
+      res.status(200).json({
+        result: activityRes.map((a) => a.json()),
+      })
+      return
+    } catch (error) {
+      log.error(error, 'Error while getting user activity')
       res.status(500).json({ error: 'Internal Server Error' })
       return
     }
