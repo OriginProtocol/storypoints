@@ -1,4 +1,4 @@
-// nonce: 35
+// nonce: 36
 import { collectActivities, updateWallets } from '@storypoints/ingest'
 import {
   Activity,
