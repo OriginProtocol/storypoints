@@ -15,7 +15,7 @@ import {
   ReservoirOrder,
 } from '@storypoints/types'
 import { TransactionResponse } from 'ethers'
-import get from 'lodash/get'
+import pick from 'lodash/pick'
 import {
   AutoIncrement,
   BeforeCreate,
@@ -179,7 +179,7 @@ export default class Activity extends Model implements IActivity {
       : {}
 
     return {
-      ...(get(this, [
+      ...(pick(this.dataValues, [
         'id',
         'valid',
         'points',

@@ -305,6 +305,7 @@ app.get(
     try {
       const activityRes = await Activity.findAll({
         where,
+        order: [['timestamp', 'DESC']],
         limit: 100,
       })
 
