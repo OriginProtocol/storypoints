@@ -53,9 +53,24 @@ Running the tests:
 yarn test
 ```
 
-## TODO
+## Commands
 
-- [ ] Need a /simulate endpoint so users can see what points they might get when
-      performing an action.
-- [ ] ENS names in output
-- [ ] Rules implementation
+### API Calls
+
+Add a collection:
+
+```bash
+curl -v -X POST -H 'Content-Type: application/json' --data '{"contractAddress": "0x3bf2922f4520a8ba0c2efc3d2a1539678dad5e9d", "description": ""}' http://localhost:3000/collection
+```
+
+Trigger a fetch (local):
+
+```bash
+curl -v -X POST -H 'Content-Type: application/json' --data '{"contractAddresses": ["0x3bf2922f4520a8ba0c2efc3d2a1539678dad5e9d"], "full": true, "requestLimit": 500}' http://localhost:3000/work
+```
+
+Trigger a fetch (remote):
+
+```bash
+curl -v -X POST -H 'Content-Type: application/json' --data '{"contractAddresses": ["0x3bf2922f4520a8ba0c2efc3d2a1539678dad5e9d"], "full": true, "requestLimit": 500}' http://LBENDPOINT.us-east-2.elb.amazonaws.com/trigger
+```
