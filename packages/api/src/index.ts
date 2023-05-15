@@ -326,6 +326,8 @@ const workerHandler = awrap(async function (
   req: Request,
   res: Response
 ): Promise<void> {
+  req.setTimeout(300000) // 5m
+
   const body = req.body as {
     task?: string
     full?: boolean
