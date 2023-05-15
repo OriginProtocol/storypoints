@@ -1,0 +1,63 @@
+{
+  "name": "@storypoints/models",
+  "description": "Origin Story Points API",
+  "author": "Origin Protocol <engineering@originprotocol.com>",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@types/supertest": "^2.0.12",
+    "dotenv": "^16.0.3",
+    "pg": "^8.10.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.30.0",
+    "sequelize-cli": "^6.6.0",
+    "sequelize-typescript": "^2.1.5",
+    "supertest": "^6.3.3",
+    "umzug": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.4",
+    "@types/express": "^4.17.17",
+    "@types/mocha": "^10.0.1",
+    "@types/nock": "^11.1.0",
+    "@types/node": "^18.15.11",
+    "@types/node-fetch": "^2.6.3",
+    "@types/sinon": "^10.0.13",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "chai": "^4.3.7",
+    "eslint": "^8.37.0",
+    "eslint-plugin-mocha-no-only": "^1.1.1",
+    "mocha": "^10.2.0",
+    "nock": "^13.3.0",
+    "nodemon": "^2.0.22",
+    "sinon": "^15.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.3"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts",
+    "test": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test mocha",
+    "test:debug": "LOG_LEVEL=debug mocha",
+    "test:watch": "mocha --watch",
+    "migrate": "ts-node $(yarn bin sequelize-cli) db:migrate",
+    "migrate:undo": "ts-node $(yarn bin sequelize-cli) db:migrate:undo",
+    "sequelize": "ts-node $(yarn bin sequelize-cli)"
+  },
+  "mocha": {
+    "require": [
+      "ts-node/register"
+    ],
+    "extension": "ts",
+    "spec": [
+      "test/**/*.spec.ts"
+    ],
+    "t": "3000",
+    "watch": true,
+    "watch-files": [
+      "src/**/*.ts",
+      "test/**/*.ts"
+    ]
+  }
+}

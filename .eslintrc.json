@@ -1,0 +1,59 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": ["./tsconfig.json", "**/tsconfig.json"]
+  },
+  "env": {
+    "node": true,
+    "es6": true,
+    "mocha": true
+  },
+  "plugins": ["import", "@typescript-eslint", "mocha-no-only"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:@typescript-eslint/strict"
+  ],
+  "globals": {
+    "Iterator": true,
+    "IteratorResult": true,
+    "Iterable": true
+  },
+  "rules": {
+    "computed-property-spacing": ["error"],
+    "key-spacing": ["error"],
+    "import/no-unresolved": ["error"],
+    "no-case-declarations": ["off"],
+    "no-console": ["error"],
+    "no-var": ["error"],
+    "no-undef": ["warn"],
+    "object-curly-spacing": ["error", "always"],
+    "prefer-const": ["error"],
+    "mocha-no-only/mocha-no-only": ["error"],
+    "quotes": [
+      "error",
+      "single",
+      {
+        "avoidEscape": true,
+        "allowTemplateLiterals": true
+      }
+    ],
+    "semi": ["error", "never"],
+    "comma-dangle": ["off", "always"],
+    "@typescript-eslint/no-empty-function": "warn",
+    "@typescript-eslint/no-explicit-any": "warn"
+  },
+  "settings": {
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true,
+        "project": "**/tsconfig.json"
+      }
+    }
+  }
+}

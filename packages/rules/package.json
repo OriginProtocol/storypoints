@@ -1,0 +1,55 @@
+{
+  "name": "@storypoints/rules",
+  "description": "Origin Story Points Rules",
+  "author": "Origin Protocol <engineering@originprotocol.com>",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@storypoints/models": "^0.1.0",
+    "@storypoints/utils": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.4",
+    "@types/express": "^4.17.17",
+    "@types/mocha": "^10.0.1",
+    "@types/nock": "^11.1.0",
+    "@types/node": "^18.15.11",
+    "@types/node-fetch": "^2.6.3",
+    "@types/sinon": "^10.0.13",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "chai": "^4.3.7",
+    "eslint": "^8.37.0",
+    "eslint-import-resolver-typescript": "^3.5.5",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-mocha-no-only": "^1.1.1",
+    "mocha": "^10.2.0",
+    "nock": "^13.3.0",
+    "nodemon": "^2.0.22",
+    "sinon": "^15.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.3"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts",
+    "test": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test mocha",
+    "test:debug": "LOG_LEVEL=debug mocha",
+    "test:watch": "mocha --watch"
+  },
+  "mocha": {
+    "require": [
+      "ts-node/register"
+    ],
+    "extension": "ts",
+    "spec": [
+      "**/*.spec.ts"
+    ],
+    "t": "3000",
+    "watch": true,
+    "watch-files": [
+      "src/**/*.ts",
+      "test/**/*.ts"
+    ]
+  }
+}

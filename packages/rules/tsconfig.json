@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "src",
+    "composite": true,
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "paths": {
+      "@storypoints/utils/*": ["../utils/src/*"]
+    }
+  },
+  "include": ["src"]
+}

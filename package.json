@@ -1,0 +1,28 @@
+{
+  "name": "storypoints",
+  "version": "0.1.0",
+  "description": "Origin Story Points System",
+  "author": "Origin Protocol <engineering@originprotocol.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "deploy:sandbox": "yarn workspace @storypoints/infra deploy:sandbox",
+    "destroy:sandbox": "yarn workspace @storypoints/infra destroy:sandbox",
+    "synthesize:sandbox": "yarn workspace @storypoints/infra synthesize:sandbox",
+    "start:dev": "yarn nodemon",
+    "start": "yarn workspace @storypoints/api start",
+    "lint": "eslint . --ext .ts",
+    "test": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test mocha",
+    "test:debug": "LOG_LEVEL=debug mocha",
+    "test:watch": "mocha --watch",
+    "migrate": "yarn workspace @storypoints/models migrate",
+    "migrate:undo": "yarn workspace @storypoints/models migrate:undo",
+    "sequelize": "ts-node $(yarn bin sequelize-cli)"
+  }
+}
