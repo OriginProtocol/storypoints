@@ -463,6 +463,11 @@ export class StoryPoints extends Stack {
     ]
     const workerSettings = [
       {
+        namespace: 'aws:elb:policies',
+        optionName: 'ConnectionSettingIdleTimeout',
+        value: '300',
+      },
+      {
         namespace: 'aws:elasticbeanstalk:sqsd',
         optionName: 'WorkerQueueURL',
         value: workerQueue.queueUrl,

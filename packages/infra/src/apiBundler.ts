@@ -53,6 +53,18 @@ export default class ApiBundler implements ILocalBundling {
       }
     })
 
+    // Copy nginx config file(s)
+    const nginxConfPath = '.platform/nginx/conf.d/'
+    const nginxConfDir = path.resolve(path.join(__dirname, nginxConfPath))
+    const nginxConfFiles = fs.readdirSync(nginxConfDir)
+    fs.mkdirSync(path.join(outdir, nginxConfPath), { recursive: true })
+    for (const fname of nginxConfFiles) {
+      const csrc = path.join(nginxConfDir, fname)
+      const cdst = path.join(outdir, nginxConfPath, fname)
+      console.log(`Copying ${csrc} to ${cdst}`)
+      fs.copyFileSync(csrc, cdst)
+    }
+
     // TODO: Maybe should accept this as a parameter?
     const rulesSourceDir = path.resolve(
       path.join(__dirname, '..', '..', 'rules', 'src', 'rules'),

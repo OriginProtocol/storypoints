@@ -1,4 +1,4 @@
-// nonce: 36
+// nonce: 39
 import { collectActivities, updateWallets } from '@storypoints/ingest'
 import {
   Activity,
@@ -50,6 +50,7 @@ const findBoost = (amount: bigint): number => {
 
   return 1.0
 }
+const workerStamp: Record<string, number> = {}
 
 app.use(cors())
 app.use(express.json())
@@ -332,6 +333,21 @@ const workerHandler = awrap(async function (
     requestLimit?: number
   }
 
+  log.debug(body, 'Received worker request')
+
+  const now = +new Date()
+  const reqKey = `${body.task ?? 'default'}-${(
+    body.contractAddresses ?? []
+  ).join(',')}-${body.full ? 'full' : ''}`
+  // Let's not run multiple instance of the worker process
+  if ((workerStamp[reqKey] || 0) > now - 30 * 1000) {
+    log.warn(`Already processing for ${reqKey}`)
+    res.status(200).json({ success: false, message: 'In process', reqKey })
+    return
+  } else {
+    workerStamp[reqKey] = now
+  }
+
   log.info(
     {
       contractAddresses: body.contractAddresses,
@@ -374,7 +390,10 @@ const workerHandler = awrap(async function (
     }
   }
 
+  log.debug(body, 'Completed worker request')
+
   res.status(200).json({ success: true })
+  workerStamp[reqKey] = 0
 })
 
 if (isWorker) {

@@ -285,9 +285,18 @@ export async function collectActivities({
         }
       }
 
-      const [, created] = await insertActivity(actProps)
-      if (created) {
-        insertCount += 1
+      try {
+        const [, created] = await insertActivity(actProps)
+        if (created) {
+          insertCount += 1
+        }
+      } catch (err) {
+        // console.error(err)
+        log.error(
+          `Error occurred trying to insret activity ${
+            actProps.activityHash ? buf2hex(actProps.activityHash) : 'UNK'
+          }`
+        )
       }
     }
 
@@ -308,6 +317,9 @@ export async function collectActivities({
 export async function insertActivity(
   actProps: IActivity
 ): Promise<[Activity, boolean]> {
+  const hexHash = actProps.activityHash ? buf2hex(actProps.activityHash) : 'UNK'
+  log.debug(`Attempting to find or create Activity ${hexHash}`)
+
   const [activity, created] = await Activity.findOrCreate({
     where: { activityHash: actProps.activityHash },
     defaults: {
@@ -315,7 +327,6 @@ export async function insertActivity(
     },
   })
 
-  const hexHash = actProps.activityHash ? buf2hex(actProps.activityHash) : 'UNK'
   if (created) {
     log.info(`Inserted activity ${hexHash}`)
   } else {
@@ -337,7 +348,14 @@ export async function makeAdjustments(
     })
 
     if (!acts.length) {
-      log.debug(adjust, 'No activities found matching adjustment criterea')
+      log.debug(
+        {
+          type: adjust.type,
+          multiplier: adjust.multiplier,
+          reservoirOrderId: buf2hex(adjust.reservoirOrderId),
+        },
+        'No activities found matching adjustment criteria'
+      )
       continue
     }
 
