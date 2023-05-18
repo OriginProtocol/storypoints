@@ -4,7 +4,7 @@
 
 import { fetchFromReservoir } from '@storypoints/utils/reservoir'
 import { GetOrderResponse, IActivity, ReservoirOrder } from '@storypoints/types'
-import { logger } from '@storypoints/utils'
+import { buf2hex, logger } from '@storypoints/utils'
 
 const log = logger.child({ app: 'ingest', module: 'orders' })
 
@@ -46,21 +46,39 @@ export async function fetchOrderBid(
 
 // Add an orderBlob and an IActivity
 export async function addOrderBlob(activity: IActivity): Promise<IActivity> {
-  const orderId = activity.activityBlob.order?.id
+  if (!activity.activityBlob.order) return activity
 
-  if (!orderId) return activity
+  let order
+  const { id, side } = activity.activityBlob.order
 
-  let order = await fetchOrderAsk(orderId)
+  if (!id) {
+    log.warn(
+      {
+        activityHash: activity.activityHash
+          ? buf2hex(activity.activityHash)
+          : 'UNK',
+      },
+      'Order on activity is missing id!'
+    )
+    return activity
+  }
 
-  if (!order) {
-    order = await fetchOrderBid(orderId)
+  if (side === 'ask') {
+    order = await fetchOrderAsk(id)
+  } else if (side === 'bid') {
+    order = await fetchOrderBid(id)
+  } else {
+    // Try both? Probably a dead code path but the types say otherwise
+    order = await fetchOrderAsk(id)
 
     if (!order) {
-      return activity
+      order = await fetchOrderBid(id)
     }
   }
 
-  activity.orderBlob = order
+  if (order) {
+    activity.orderBlob = order
+  }
 
   return activity
 }

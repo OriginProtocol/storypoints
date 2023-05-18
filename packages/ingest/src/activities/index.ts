@@ -191,6 +191,20 @@ export async function collectActivities({
         ? hex2buf(actProps.activityBlob.order.id)
         : undefined
 
+      // Check early if it exists, if it does, we can skip most of the rest
+      const found = await Activity.count({
+        where: { activityHash: actProps.activityHash },
+      })
+
+      if (found) {
+        // SKIIIIIIP
+        log.debug(
+          { activityHash: buf2hex(actProps.activityHash) },
+          'Activity already known'
+        )
+        continue
+      }
+
       // TODO: For now, we're only adding order blobs to native activities and
       // sales for efficiency raisins.  Wonder if we could make this lazy on
       // the model somehow?
@@ -292,9 +306,14 @@ export async function collectActivities({
       } catch (err) {
         // console.error(err)
         log.error(
-          `Error occurred trying to insret activity ${
-            actProps.activityHash ? buf2hex(actProps.activityHash) : 'UNK'
-          }`
+          {
+            message: (err as { message?: string }).message,
+            code: (err as { code?: unknown }).code,
+            activityHash: buf2hex(actProps.activityHash),
+          },
+          `Error occurred trying to insret activity ${buf2hex(
+            actProps.activityHash
+          )}`
         )
       }
     }
