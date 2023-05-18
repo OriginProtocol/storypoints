@@ -54,17 +54,23 @@ interface StoryPointsProps extends StackProps {
   domainName: string
   enableTestRules?: boolean
   instanceType?: string
+  privateSubnets?: string[]
   removalPolicy?: RemovalPolicy
+  reservoirUrl?: string
 }
-
-// Both within the default subnet of the default VPC
-const PRIVATE_SUBNET_CIDRS = ['172.31.128.0/24', '172.31.138.0/24']
 
 export class StoryPoints extends Stack {
   constructor(scope: App, id: string, props: StoryPointsProps) {
     super(scope, id, props)
     const { region } = Stack.of(this)
-    const { domainName, enableTestRules, instanceType, removalPolicy } = props
+    const {
+      domainName,
+      enableTestRules,
+      instanceType,
+      privateSubnets: privateSubnetsParam = [],
+      removalPolicy,
+      reservoirUrl,
+    } = props
     const context = scope.node.tryGetContext(id) as {
       configSecretsArn: string
       vpc: string
@@ -84,25 +90,23 @@ export class StoryPoints extends Stack {
     const reservoirApiKey = secrets
       .secretValueFromJson('reservoirApiKey')
       .unsafeUnwrap()
+    const mainnetJsonRpcProviderUrl = secrets
+      .secretValueFromJson('mainnetJsonRpcProviderUrl')
+      .unsafeUnwrap()
     const jsonRpcProviderUrl = secrets
       .secretValueFromJson('jsonRpcProviderUrl')
       .unsafeUnwrap()
     const apiKey = secrets.secretValueFromJson('apiKey').unsafeUnwrap()
 
     const privateSubnets = []
-    if (!vpc.privateSubnets.length) {
-      const p0 = new PrivateSubnet(this, `${appName}-private0`, {
-        availabilityZone: this.availabilityZones[0],
-        cidrBlock: PRIVATE_SUBNET_CIDRS[0],
-        vpcId: vpc.vpcId,
-      })
-      const p1 = new PrivateSubnet(this, `${appName}-private1`, {
-        availabilityZone: this.availabilityZones[1],
-        cidrBlock: PRIVATE_SUBNET_CIDRS[1],
-        vpcId: vpc.vpcId,
-      })
-      privateSubnets.push(p0)
-      privateSubnets.push(p1)
+    for (const [i, cidr] of privateSubnetsParam.entries()) {
+      privateSubnets.push(
+        new PrivateSubnet(this, `${appName}-private${i}`, {
+          availabilityZone: this.availabilityZones[i],
+          cidrBlock: cidr,
+          vpcId: vpc.vpcId,
+        }),
+      )
     }
 
     const ebApplication = new elasticbeanstalk.CfnApplication(this, appName, {
@@ -222,8 +226,8 @@ export class StoryPoints extends Stack {
 
     const workerQueue = new Queue(this, 'Worker', {
       removalPolicy,
-      fifo: true,
-      contentBasedDeduplication: true,
+      //fifo: true,
+      //contentBasedDeduplication: true,
       visibilityTimeout: Duration.seconds(300),
     })
     workerQueue.grantSendMessages(webtierRole)
@@ -293,9 +297,10 @@ export class StoryPoints extends Stack {
 
     const appBundle = new Asset(this, 'StoryPointsApp', {
       path: appPath,
+      // TODO: compute asset hash with local deps so this rolls on all
+      // changes.  This random hash will force a deployment every time.
+      assetHash: (Math.random() + 1).toString(36).substring(2),
       bundling: {
-        // TODO: compute asset hash with local deps so this rolls on all changes
-        //assetHash: TODO
         local: new ApiBundler(appPath, 'node16.17'),
         // Docker image seems to be required but unused with local defined?
         image: DockerImage.fromRegistry('alpine'),
@@ -410,8 +415,13 @@ export class StoryPoints extends Stack {
       },
       {
         namespace: 'aws:elasticbeanstalk:application:environment',
-        optionName: 'JSON_PRC_PROVIDER',
+        optionName: 'JSON_RPC_PROVIDER',
         value: jsonRpcProviderUrl,
+      },
+      {
+        namespace: 'aws:elasticbeanstalk:application:environment',
+        optionName: 'JSON_RPC_PROVIDER_MAINNET',
+        value: mainnetJsonRpcProviderUrl,
       },
       {
         namespace: 'aws:elasticbeanstalk:application:environment',
@@ -419,6 +429,15 @@ export class StoryPoints extends Stack {
         value: enableTestRules ? 'true' : 'false',
       },
     ]
+
+    if (reservoirUrl) {
+      commonSettings.push({
+        namespace: 'aws:elasticbeanstalk:application:environment',
+        optionName: 'RESERVOIR_URL',
+        value: reservoirUrl,
+      })
+    }
+
     const webSettings = [
       {
         namespace: 'aws:ec2:vpc',
@@ -517,14 +536,6 @@ export class StoryPoints extends Stack {
 
 const app = new App()
 
-/* TODO
-new StoryPoints(app, 'prod', {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,,
-    region: 'us-east-2',
-  },
-  removalPolicy: RemovalPolicy.DESTROY,
-})*/
 new StoryPoints(app, 'sandbox', {
   domainName: 'sandbox.ogn-review.net', // TODO: make this a CDK param?
   enableTestRules: false,
@@ -532,7 +543,19 @@ new StoryPoints(app, 'sandbox', {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: 'us-east-2',
   },
+  privateSubnets: ['172.31.128.0/24', '172.31.138.0/24'],
   removalPolicy: RemovalPolicy.DESTROY,
+})
+new StoryPoints(app, 'polybox', {
+  domainName: 'polybox.ogn-review.net',
+  enableTestRules: false,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: 'us-east-2',
+  },
+  privateSubnets: ['172.31.129.0/24', '172.31.139.0/24'],
+  removalPolicy: RemovalPolicy.DESTROY,
+  reservoirUrl: 'https://api-polygon.reservoir.tools',
 })
 
 app.synth()

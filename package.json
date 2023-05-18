@@ -12,6 +12,8 @@
     "packages/*"
   ],
   "scripts": {
+    "deploy:polybox": "yarn workspace @storypoints/infra deploy:polybox",
+    "synthesize:polybox": "yarn workspace @storypoints/infra synthesize:polybox",
     "deploy:sandbox": "yarn workspace @storypoints/infra deploy:sandbox",
     "destroy:sandbox": "yarn workspace @storypoints/infra destroy:sandbox",
     "synthesize:sandbox": "yarn workspace @storypoints/infra synthesize:sandbox",

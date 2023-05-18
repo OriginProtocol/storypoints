@@ -2,6 +2,9 @@
   "name": "@storypoints/infra",
   "version": "0.1.0",
   "scripts": {
+    "deploy:polybox": "cdk deploy polybox",
+    "destroy:polybox": "cdk destroy polybox",
+    "synthesize:polybox": "cdk synthesize polybox",
     "deploy:sandbox": "cdk deploy sandbox",
     "destroy:sandbox": "cdk destroy sandbox",
     "synthesize:sandbox": "cdk synthesize sandbox",

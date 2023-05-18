@@ -1,4 +1,4 @@
-// nonce: 39
+// nonce: 44
 import { collectActivities, updateWallets } from '@storypoints/ingest'
 import {
   Activity,
@@ -474,7 +474,6 @@ app.post(
           contractAddresses,
           fullHistory,
         }),
-        MessageGroupId: `${APP_NAME}-worker`,
       })
     )
 

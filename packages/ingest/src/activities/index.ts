@@ -13,13 +13,12 @@ import {
 } from '@storypoints/types'
 import {
   dateToUnix,
-  getOGN,
-  getProvider,
   hex2buf,
   buf2hex,
   logger,
   unixToJSDate,
 } from '@storypoints/utils'
+import { getOGN, getProvider } from '@storypoints/utils/eth'
 import {
   fetchFromReservoir,
   getCheapestOrder,
