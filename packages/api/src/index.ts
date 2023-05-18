@@ -12,11 +12,13 @@ import {
   address,
   addressMaybe,
   buf2hex,
+  dateToUnix,
   hex2buf,
   logger,
 } from '@storypoints/utils'
 import { E_18, getOGN } from '@storypoints/utils/eth'
-import { IActivity } from '@storypoints/types'
+import { fetchFromReservoir } from '@storypoints/utils/reservoir'
+import { GetCollectionActivityResponse } from '@storypoints/types'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
@@ -319,6 +321,72 @@ app.get(
       res.status(500).json({ error: 'Internal Server Error' })
       return
     }
+  })
+)
+
+app.get(
+  '/health',
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    let reservoir = 0
+    let latest = 0
+
+    try {
+      const collections = await Collection.findAll({
+        attributes: ['contractAddress'],
+      })
+      if (collections.length) {
+        // TODO: This is probably going to be an issue at scale
+        const collectionParams = collections
+          .map((c) => buf2hex(c.contractAddress))
+          .join('&collection=')
+
+        const json = await fetchFromReservoir<GetCollectionActivityResponse>({
+          url: `/collections/activity/v6?includeMetadata=false&limit=1&collection=${collectionParams}`,
+        })
+
+        if (json.activities?.length) {
+          const act = json.activities[0]
+          if (act.timestamp) {
+            reservoir = act.timestamp
+          } else {
+            log.debug('No timestamp on latest Reservoir activity?')
+          }
+        } else {
+          log.debug('No latest Reservoir activity?')
+        }
+      }
+    } catch (error) {
+      log.error(error, 'Error while getting activity health data')
+      res.status(500).json({ healthy: false, error: 'Internal Server Error' })
+      return
+    }
+
+    try {
+      const latestAct = await Activity.findOne({
+        attributes: ['timestamp'],
+        order: [['timestamp', 'DESC']],
+        limit: 1,
+      })
+      if (latestAct?.timestamp) {
+        latest = dateToUnix(latestAct.timestamp)
+      } else {
+        log.debug('No latest activity')
+      }
+    } catch (error) {
+      log.error(error, 'Error while getting activity health data')
+      res.status(500).json({ healthy: false, error: 'Internal Server Error' })
+      return
+    }
+
+    const diff = reservoir - latest
+
+    res.status(200).json({
+      healthy: diff < 300, // less than 5min is unhealthy
+      diff,
+      reservoir,
+      latest,
+    })
+    return
   })
 )
 
