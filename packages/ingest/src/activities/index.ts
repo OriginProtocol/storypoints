@@ -219,10 +219,10 @@ export async function collectActivities({
 
       let cheapestOrder, collectionFloorPrice, userOgnStake
       if (['ask', 'bid'].includes(actProps.type)) {
-        if (actProps.activityBlob.tokenId) {
+        if (actProps.activityBlob.token?.tokenId) {
           const cheapest = await getCheapestOrder(
             actProps.contractAddress,
-            actProps.activityBlob.tokenId
+            actProps.activityBlob.token?.tokenId
           )
 
           if (!cheapest || hex2buf(cheapest.id) === actProps.reservoirOrderId) {
