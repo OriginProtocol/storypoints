@@ -1,4 +1,4 @@
-// nonce: 44
+// nonce: 45
 import { collectActivities, updateWallets } from '@storypoints/ingest'
 import {
   Activity,
@@ -384,7 +384,9 @@ app.get(
       healthy: diff < 300, // less than 5min is unhealthy
       diff,
       reservoir,
+      reservoirHuman: reservoir ? new Date(reservoir * 1000).toISOString() : '',
       latest,
+      latestHuman: latest ? new Date(latest * 1000).toISOString() : '',
     })
     return
   })
