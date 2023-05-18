@@ -22,8 +22,12 @@ export function getProvider(): JsonRpcProvider {
 
 export function getMainnetProvider(): JsonRpcProvider {
   // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-  const url = process.env.JSON_RPC_PROVIDER_MAINNET
-  if (!url) throw new Error('JSON_RPC_PROVIDER_MAINNET are undefined')
+  const url =
+    process.env.JSON_RPC_PROVIDER_MAINNET || process.env.JSON_RPC_PROVIDER
+  if (!url)
+    throw new Error(
+      'JSON_RPC_PROVIDER_MAINNET and JSON_RPC_PROVIDER are undefined'
+    )
   if (!mainnetProvider) {
     mainnetProvider = new JsonRpcProvider(url)
   }
