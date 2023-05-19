@@ -159,7 +159,7 @@ export default class Activity extends Model implements IActivity {
 
   @BeforeCreate
   static hashActivity(act: Activity) {
-    act.activityHash = hashActivity(act)
+    if (!act.activityHash) act.activityHash = hashActivity(act)
   }
 
   // TODO: can/should toJSON() be overridden?

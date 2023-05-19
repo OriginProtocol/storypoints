@@ -5,9 +5,11 @@ import {
   Collection,
   Op,
   Wallet,
+  obtainWorkerLock,
+  releaseWorkerLock,
   sequelize,
 } from '@storypoints/models'
-import { scoreActivity } from '@storypoints/rules'
+//import { scoreActivity } from '@storypoints/rules'
 import {
   address,
   addressMaybe,
@@ -52,7 +54,6 @@ const findBoost = (amount: bigint): number => {
 
   return 1.0
 }
-const workerStamp: Record<string, number> = {}
 
 app.use(cors())
 app.use(express.json())
@@ -80,7 +81,7 @@ interface Leader {
 type ExpressAsyncHandler = (
   req: Request,
   res: Response,
-  next?: NextFunction
+  next: NextFunction
 ) => Promise<unknown>
 
 const awrap = (fn: ExpressAsyncHandler) => {
@@ -392,9 +393,30 @@ app.get(
   })
 )
 
+const workerLock = function (req: Request, res: Response, next: NextFunction) {
+  const [granted, expires] = obtainWorkerLock()
+
+  if (!granted) {
+    res.status(200).json({ success: false, expires })
+    return
+  }
+
+  next()
+}
+
+const workerUnlock = function (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  releaseWorkerLock()
+  next()
+}
+
 const workerHandler = awrap(async function (
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ): Promise<void> {
   req.setTimeout(300000) // 5m
 
@@ -403,21 +425,6 @@ const workerHandler = awrap(async function (
     full?: boolean
     contractAddresses?: string[]
     requestLimit?: number
-  }
-
-  log.debug(body, 'Received worker request')
-
-  const now = +new Date()
-  const reqKey = `${body.task ?? 'default'}-${(
-    body.contractAddresses ?? []
-  ).join(',')}-${body.full ? 'full' : ''}`
-  // Let's not run multiple instance of the worker process
-  if ((workerStamp[reqKey] || 0) > now - 30 * 1000) {
-    log.warn(`Already processing for ${reqKey}`)
-    res.status(200).json({ success: false, message: 'In process', reqKey })
-    return
-  } else {
-    workerStamp[reqKey] = now
   }
 
   log.info(
@@ -465,14 +472,14 @@ const workerHandler = awrap(async function (
   log.debug(body, 'Completed worker request')
 
   res.status(200).json({ success: true })
-  workerStamp[reqKey] = 0
+  next()
 })
 
 if (isWorker) {
-  app.post('/', workerHandler)
+  app.post('/', workerLock, workerHandler, workerUnlock)
 } else if (!isProdEnv) {
   // Conditional local runner
-  app.post('/work', workerHandler)
+  app.post('/work', workerLock, workerHandler, workerUnlock)
 }
 
 // Add a collection

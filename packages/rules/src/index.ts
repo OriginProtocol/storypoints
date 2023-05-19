@@ -66,10 +66,9 @@ export async function scoreActivity(activity: IActivity): Promise<RuleContext> {
   for (const rule of rules) {
     ctx = await rule.run(ctx, activity)
 
-    log.debug(ctx, `Rule ${rule.name} executed`)
-
     if (!ctx.valid && !isInvalid) {
       log.debug(
+        ctx,
         `Rules ${rule.name} has invalidated activity ${
           activity.activityHash ? buf2hex(activity.activityHash) : 'UNK'
         }`

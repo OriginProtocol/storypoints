@@ -203,6 +203,11 @@ export async function collectActivities({
           'Activity already known'
         )
         continue
+      } else {
+        log.debug(
+          { activityHash: buf2hex(actProps.activityHash) },
+          'Activity not known'
+        )
       }
 
       // TODO: For now, we're only adding order blobs to native activities and
@@ -233,19 +238,27 @@ export async function collectActivities({
 
       let cheapestOrder, collectionFloorPrice, userOgnStake
       if (['ask', 'bid'].includes(actProps.type)) {
-        if (actProps.activityBlob.token?.tokenId) {
-          const cheapest = await getCheapestOrder(
-            actProps.contractAddress,
-            actProps.activityBlob.token?.tokenId
-          )
+        if (actProps.type === 'ask') {
+          cheapestOrder = true
 
-          if (!cheapest || hex2buf(cheapest.id) === actProps.reservoirOrderId) {
-            cheapestOrder = true
-          } else {
-            cheapestOrder = false
+          if (actProps.activityBlob.token?.tokenId) {
+            const cheapest = await getCheapestOrder(
+              actProps.contractAddress,
+              actProps.activityBlob.token?.tokenId
+            )
+
+            if (
+              // if we have a response
+              cheapest &&
+              // and its not the order we're handling now
+              hex2buf(cheapest.id) !== actProps.reservoirOrderId &&
+              // and it's the same owner
+              hex2buf(cheapest.maker) === actProps.walletAddress
+            ) {
+              // it ain't the cheapest
+              cheapestOrder = false
+            }
           }
-        } else {
-          cheapestOrder = false
         }
 
         collectionFloorPrice = await getCollectionFloor(
@@ -299,12 +312,15 @@ export async function collectActivities({
       }
 
       try {
-        const [, created] = await insertActivity(actProps)
-        if (created) {
-          insertCount += 1
-        }
+        log.debug(
+          `Inserting Activity ${
+            actProps.activityHash ? buf2hex(actProps.activityHash) : 'UNK'
+          }`
+        )
+        await Activity.create({ ...actProps })
+        insertCount += 1
       } catch (err) {
-        // console.error(err)
+        console.error(err)
         log.error(
           {
             message: (err as { message?: string }).message,
@@ -330,28 +346,6 @@ export async function collectActivities({
   log.info(
     `Finished collecting ${insertCount} activities with ${requestCount} requests`
   )
-}
-
-export async function insertActivity(
-  actProps: IActivity
-): Promise<[Activity, boolean]> {
-  const hexHash = actProps.activityHash ? buf2hex(actProps.activityHash) : 'UNK'
-  log.debug(`Attempting to find or create Activity ${hexHash}`)
-
-  const [activity, created] = await Activity.findOrCreate({
-    where: { activityHash: actProps.activityHash },
-    defaults: {
-      ...actProps,
-    },
-  })
-
-  if (created) {
-    log.info(`Inserted activity ${hexHash}`)
-  } else {
-    log.debug(`Activity ${hexHash} already exists`)
-  }
-
-  return [activity, created]
 }
 
 export async function makeAdjustments(
