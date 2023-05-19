@@ -198,10 +198,10 @@ export async function collectActivities({
 
       if (found) {
         // SKIIIIIIP
-        log.debug(
+        /*log.debug(
           { activityHash: buf2hex(actProps.activityHash) },
           'Activity already known'
-        )
+        )*/
         continue
       } else {
         log.debug(
