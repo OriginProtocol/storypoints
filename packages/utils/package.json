@@ -8,7 +8,7 @@
   "dependencies": {
     "@ethersproject/address": "^5.7.0",
     "@ethersproject/bignumber": "^5.7.0",
-    "@reservoir0x/reservoir-sdk": "^0.9.1",
+    "@reservoir0x/reservoir-sdk": "0.10",
     "@types/supertest": "^2.0.12",
     "dotenv": "^16.0.3",
     "ethers": "^6.3.0",

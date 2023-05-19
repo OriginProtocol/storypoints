@@ -94,7 +94,7 @@ export type GetCollectionActivityResponse =
 export type ReservoirCollectionActivity = definitions['Model96']
 export type GetOrderResponse =
   paths['/orders/asks/v4']['get']['responses']['200']['schema']
-export type ReservoirOrder = definitions['Model148']
+export type ReservoirOrder = definitions['Model151']
 
 // TODO: Remove all refs to this, use sdk
 export interface ReservoirActivity {

@@ -1561,10 +1561,10 @@
     tiny-glob "^0.2.9"
     tslib "^2.4.0"
 
-"@reservoir0x/reservoir-sdk@^0.9.1":
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/@reservoir0x/reservoir-sdk/-/reservoir-sdk-0.9.1.tgz#83d9e14baa463ebdf5eaf8d0529bda1c40cf4687"
-  integrity sha512-Z28BWqQiVpUojwgjuYzY1IePYQKJFN9FavgXNUFF4uti0eWYbldmonXPbyNtOoL9YweeczrXtZjqH9ATx9VjCg==
+"@reservoir0x/reservoir-sdk@0.10", "@reservoir0x/reservoir-sdk@^0.10":
+  version "0.10.5"
+  resolved "https://registry.yarnpkg.com/@reservoir0x/reservoir-sdk/-/reservoir-sdk-0.10.5.tgz#b301aef276ef4eead2524598ee7ce1d326096535"
+  integrity sha512-soFaCuxEzlZ3ldCuSCdkdjxGp4z+XVcbvT1LgnP7W2b4THakjU+bvKD/P54oSZhcNFEYRhqJ5JxWJt3sq4HyvQ==
   dependencies:
     axios "^0.27.2"
 

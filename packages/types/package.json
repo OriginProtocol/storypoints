@@ -5,9 +5,8 @@
   "version": "0.1.0",
   "license": "MIT",
   "main": "src/index.ts",
-  "dependencies": {},
   "devDependencies": {
-    "@reservoir0x/reservoir-sdk": "^0.9.1",
+    "@reservoir0x/reservoir-sdk": "^0.10",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "eslint": "^8.37.0",
