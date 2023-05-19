@@ -244,7 +244,14 @@ app.get(
     try {
       const userRes = await Activity.findAll({
         where,
-        attributes: [[sequelize.literal('SUM(multiplier * points)'), 'score']],
+        attributes: [
+          [
+            sequelize.literal(
+              'SUM(ROUND(multiplier * points * adjustment_multiplier))'
+            ),
+            'score',
+          ],
+        ],
       })
 
       if (!userRes.length) {
