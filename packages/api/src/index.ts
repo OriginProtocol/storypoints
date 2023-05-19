@@ -151,7 +151,7 @@ app.get(
           'walletAddress',
           [
             sequelize.literal(
-              'SUM(multiplier * points * adjustment_multiplier)'
+              'SUM(ROUND(multiplier * points * adjustment_multiplier))'
             ),
             'score',
           ],
