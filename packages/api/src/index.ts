@@ -321,7 +321,14 @@ app.get(
       })
 
       res.status(200).json({
-        result: activityRes.map((a) => a.json()),
+        result: activityRes.map((a) => {
+          const o = a.json()
+          o.token = {
+            contract: a.activityBlob.contract,
+            tokenId: a.activityBlob.token?.tokenId,
+          }
+          return o
+        }),
       })
       return
     } catch (error) {
