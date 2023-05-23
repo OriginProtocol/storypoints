@@ -64,7 +64,8 @@ function apiKeyMiddleware(
   next: NextFunction
 ): void {
   const key = req.headers['x-api-key'] as string
-  if (key !== apiKey) {
+  // If API_KEY is unset in prod, always 401
+  if ((isProdEnv && !apiKey) || key !== apiKey) {
     res.status(401).json({ message: 'Unauthorized' })
     return
   }

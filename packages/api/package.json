@@ -42,7 +42,7 @@
     "typescript": "^5.0.3"
   },
   "scripts": {
-    "start": "API_KEY=asdf1234 yarn nodemon src/index.ts",
+    "start": "yarn nodemon src/index.ts",
     "lint": "eslint . --ext .ts",
     "test": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test mocha --exit --timeout 10000",
     "test:debug": "LOG_LEVEL=debug mocha",
