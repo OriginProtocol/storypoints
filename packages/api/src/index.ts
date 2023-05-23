@@ -356,8 +356,10 @@ app.get(
           .map((c) => buf2hex(c.contractAddress))
           .join('&collection=')
 
+        const typesParams =
+          '&types=ask&types=ask_cancel&types=bid&types=bid_cancel&types=sale'
         const json = await fetchFromReservoir<GetCollectionActivityResponse>({
-          url: `/collections/activity/v6?includeMetadata=false&limit=1&collection=${collectionParams}`,
+          url: `/collections/activity/v6?includeMetadata=false${typesParams}&limit=1&collection=${collectionParams}`,
         })
 
         if (json.activities?.length) {
