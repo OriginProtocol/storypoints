@@ -92,6 +92,10 @@ export type GetCollectionActivityParams =
 export type GetCollectionActivityResponse =
   paths['/collections/activity/v6']['get']['responses']['200']['schema']
 export type ReservoirCollectionActivity = definitions['Model96']
+export type GetSalesResponse =
+  paths['/sales/v4']['get']['responses']['200']['schema']
+export type ReservoirSales = GetSalesResponse['sales']
+export type ReservoirSale = definitions['Model58']
 export type GetOrderResponse =
   paths['/orders/asks/v4']['get']['responses']['200']['schema']
 export type ReservoirOrder = definitions['Model151']

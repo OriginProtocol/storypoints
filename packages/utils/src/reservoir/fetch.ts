@@ -24,10 +24,15 @@ export async function fetchFromReservoir<T>(
   //gives us exponential backoff and retries - see https://github.com/sjinks/node-fetch-retry-ts
   const fetch = fetchBuilder(originalFetch, {
     retries,
-    retryDelay: (attempt: number) => {
+    retryDelay: (
+      attempt: number,
+      error: Error | null
+      /*response: Response | null*/
+    ) => {
       const delay = retryDelay * Math.pow(2, attempt)
+
       logger.warn(
-        { app: 'utils', module: 'reservoir/fetch' },
+        { app: 'utils', error, module: 'reservoir/fetch' },
         `Attempting to fetch again in ${delay}ms (${url})`
       )
       return delay
@@ -36,6 +41,7 @@ export async function fetchFromReservoir<T>(
   })
 
   logger.info(`Fetching from Reservoir API: ${RESERVOIR_URL}${url}`)
+
   const response = await fetch(`${RESERVOIR_URL}${url}`, {
     headers: { 'X-API-Key': RESERVOIR_API_KEY },
   })

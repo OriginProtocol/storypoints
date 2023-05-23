@@ -4,6 +4,7 @@ import {
   ActivityType,
   ReservoirCollectionActivity,
   ReservoirOrder,
+  ReservoirSale,
 } from './reservoir'
 
 export interface IActivityContext {
@@ -26,6 +27,7 @@ export interface IActivity {
   priceUSD?: number
   reservoirOrderId?: Buffer
   reason?: string
+  saleBlob?: ReservoirSale
   timestamp: Date
   transactionBlob?: TransactionResponse
   type: ActivityType

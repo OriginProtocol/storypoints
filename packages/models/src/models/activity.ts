@@ -13,6 +13,7 @@ import {
   JSONValue,
   ReservoirCollectionActivity,
   ReservoirOrder,
+  ReservoirSale,
 } from '@storypoints/types'
 import { TransactionResponse } from 'ethers'
 import pick from 'lodash/pick'
@@ -133,6 +134,12 @@ export default class Activity extends Model implements IActivity {
     field: 'context_blob',
   })
   contextBlob?: IActivityContext
+
+  @Column({
+    type: DataType.JSONB,
+    field: 'sale_blob',
+  })
+  saleBlob?: ReservoirSale
 
   @Column({
     type: DataType.JSONB,

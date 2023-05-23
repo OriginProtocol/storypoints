@@ -11,6 +11,7 @@ import * as addAdjustmentMultiplier from './migrations/20230504182340-add-adjust
 import * as addReason from './migrations/20230504202005-add-reason'
 import * as addTxBlob from './migrations/20230505211318-add-tx-blob'
 import * as addIndexes from './migrations/20230509205552-add-indexes'
+import * as addSaleBlob from './migrations/20230522192206-add-sale-blob'
 import { QueryInterface, sequelize } from './models'
 
 interface MigrationModule {
@@ -28,6 +29,7 @@ const migrations = {
   ['20230504202005-add-reason.js']: addReason,
   ['20230505211318-add-tx-blob.js']: addTxBlob,
   ['20230509205552-add-indexes.js']: addIndexes,
+  ['20230522192206-add-sale-blob.js']: addSaleBlob,
 }
 
 const umzug = new Umzug({
