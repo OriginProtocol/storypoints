@@ -342,6 +342,7 @@ app.get(
 
 app.get(
   '/health',
+  apiKeyMiddleware,
   awrap(async function (req: Request, res: Response): Promise<void> {
     let reservoir = 0
     let latest = 0
