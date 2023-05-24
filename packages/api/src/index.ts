@@ -462,6 +462,26 @@ const workerHandler = awrap(async function (
       res.status(500).json({ success: false, message: 'Internal server error' })
       return
     }
+  } else if (body.task === 'update') {
+    const requestLimit = 3
+    const collections = (
+      await Collection.findAll({ attributes: ['contractAddress'] })
+    ).map((c) => c.contractAddress)
+
+    try {
+      for (const contractAddress of collections) {
+        await collectActivities({
+          contractAddress: buf2hex(contractAddress),
+          fullHistory: false,
+          requestLimit,
+        })
+      }
+    } catch (err) {
+      // console.error(err)
+      log.error(err, 'Error fetching listings in update task')
+      res.status(500).json({ success: false, message: 'Internal server error' })
+      return
+    }
   } else {
     const fullHistory = body.full === true
     const requestLimit = body.requestLimit ?? 10

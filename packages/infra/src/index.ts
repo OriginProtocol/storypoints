@@ -23,6 +23,8 @@ import {
   SubnetType,
   Vpc,
 } from 'aws-cdk-lib/aws-ec2'
+import { Rule, RuleTargetInput, Schedule } from 'aws-cdk-lib/aws-events'
+import { SqsQueue } from 'aws-cdk-lib/aws-events-targets'
 import {
   CfnInstanceProfile,
   Effect,
@@ -123,6 +125,9 @@ export class StoryPoints extends Stack {
 
     webtierRole.addManagedPolicy(
       ManagedPolicy.fromAwsManagedPolicyName('AWSElasticBeanstalkWebTier'),
+    )
+    webtierRole.addManagedPolicy(
+      ManagedPolicy.fromAwsManagedPolicyName('AWSElasticBeanstalkWorkerTier'),
     )
     webtierRole.addToPolicy(
       new PolicyStatement({
@@ -525,6 +530,28 @@ export class StoryPoints extends Stack {
     new CfnOutput(this, 'ElasticBeanstalkEndpoint', {
       value: ebEnv.attrEndpointUrl,
     })
+
+    // Schedule tasks
+    const collectRule = new Rule(this, 'update-task', {
+      schedule: Schedule.rate(Duration.minutes(1)),
+    })
+    collectRule.addTarget(
+      new SqsQueue(workerQueue, {
+        message: RuleTargetInput.fromObject({
+          task: 'update',
+        }),
+      }),
+    )
+    const walletRule = new Rule(this, 'wallet-task', {
+      schedule: Schedule.rate(Duration.hours(2)),
+    })
+    walletRule.addTarget(
+      new SqsQueue(workerQueue, {
+        message: RuleTargetInput.fromObject({
+          task: 'wallet',
+        }),
+      }),
+    )
 
     appVersion.addDependency(ebApplication)
     appVersion.node.addDependency(ebApplication)
