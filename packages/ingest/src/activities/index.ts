@@ -422,9 +422,13 @@ export async function makeAdjustments(
           }) by ${adjust.multiplier}`
         )
 
+        const orig = act.adjustmentMultiplier || 1
+
+        // Keep whichever adjustment is greater
+        if (orig > adjust.multiplier) continue
+
         const updateProps = {
-          adjustmentMultiplier:
-            (act.adjustmentMultiplier || 1) * adjust.multiplier,
+          adjustmentMultiplier: adjust.multiplier,
         }
         if (simulate) {
           cliout?.('adjustment:')
