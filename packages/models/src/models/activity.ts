@@ -38,12 +38,12 @@ import Wallet from './wallet'
 
 /// Hash an Activity to create a unique ident
 export function hashActivity(act: IActivity) {
-  // TODO: Should validate these are the best choice of props for uniqueness
   const hashValues = [
     act.type,
     act.walletAddress ? buf2hex(act.walletAddress) : '',
     buf2hex(act.contractAddress),
     +act.timestamp,
+    act.reservoirOrderId ? buf2hex(act.reservoirOrderId) : '',
   ]
   return hex2buf(sha256(hashValues.join('-')))
 }

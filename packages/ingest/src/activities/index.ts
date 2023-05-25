@@ -127,6 +127,7 @@ const transalateActivity = (
   timestamp: activity.timestamp ? unixToJSDate(activity.timestamp) : new Date(),
   type: (activity.type ?? 'unknown') as ActivityType,
   activityBlob: activity,
+  reservoirOrderId: activity.order?.id ? hex2buf(activity.order.id) : undefined,
   walletAddress: activity.fromAddress
     ? hex2buf(activity.fromAddress)
     : undefined,
@@ -147,9 +148,6 @@ export async function processReservoirActivity(
 ): Promise<boolean> {
   const actProps = transalateActivity(item)
   actProps.activityHash = hashActivity(actProps)
-  actProps.reservoirOrderId = actProps.activityBlob.order?.id
-    ? hex2buf(actProps.activityBlob.order.id)
-    : undefined
 
   // Check early if it exists, if it does, we can skip most of the rest
   if (!simulate && (await activityExists(actProps.activityHash))) {
