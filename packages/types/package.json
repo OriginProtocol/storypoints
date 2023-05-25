@@ -1,5 +1,5 @@
 {
-  "name": "@storypoints/types",
+  "name": "@origin/storypoints-types",
   "description": "Origin Story Points API typescript types",
   "author": "Origin Protocol <engineering@originprotocol.com>",
   "version": "0.1.0",

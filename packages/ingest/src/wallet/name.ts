@@ -1,5 +1,5 @@
-import { address, logger } from '@storypoints/utils'
-import { getMainnetProvider } from '@storypoints/utils/eth'
+import { address, logger } from '@origin/storypoints-utils'
+import { getMainnetProvider } from '@origin/storypoints-utils/eth'
 
 const log = logger.child({ app: 'ingest', module: 'wallet' })
 

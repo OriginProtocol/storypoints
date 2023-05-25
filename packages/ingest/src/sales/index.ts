@@ -1,6 +1,10 @@
-import { fetchFromReservoir } from '@storypoints/utils/reservoir'
-import { GetSalesResponse, IActivity, ReservoirSale } from '@storypoints/types'
-import { buf2hex, logger } from '@storypoints/utils'
+import { fetchFromReservoir } from '@origin/storypoints-utils/reservoir'
+import {
+  GetSalesResponse,
+  IActivity,
+  ReservoirSale,
+} from '@origin/storypoints-types'
+import { buf2hex, logger } from '@origin/storypoints-utils'
 
 const log = logger.child({ app: 'ingest', module: 'sales' })
 

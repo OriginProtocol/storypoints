@@ -1,5 +1,5 @@
-import { GetOrderResponse, ReservoirOrder } from '@storypoints/types'
-import { buf2hex } from '@storypoints/utils'
+import { GetOrderResponse, ReservoirOrder } from '@origin/storypoints-types'
+import { buf2hex } from '@origin/storypoints-utils'
 
 import { fetchFromReservoir } from './fetch'
 

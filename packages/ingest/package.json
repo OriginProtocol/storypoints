@@ -1,13 +1,13 @@
 {
-  "name": "@storypoints/ingest",
+  "name": "@origin/storypoints-ingest",
   "description": "Origin Story Points Data Ingestion",
   "author": "Origin Protocol <engineering@originprotocol.com>",
   "version": "0.1.0",
   "license": "MIT",
   "main": "src/index.ts",
   "dependencies": {
-    "@storypoints/models": "^0.1.0",
-    "@storypoints/utils": "^0.1.0",
+    "@origin/storypoints-models": "^0.1.0",
+    "@origin/storypoints-utils": "^0.1.0",
     "@types/supertest": "^2.0.12",
     "dotenv": "^16.0.3",
     "fetch-retry-ts": "^1.1.25",

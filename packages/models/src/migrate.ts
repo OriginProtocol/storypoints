@@ -1,4 +1,4 @@
-import { logger } from '@storypoints/utils'
+import { logger } from '@origin/storypoints-utils'
 import { Sequelize } from 'sequelize'
 import { SequelizeStorage, Umzug } from 'umzug'
 

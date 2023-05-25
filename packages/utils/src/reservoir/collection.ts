@@ -1,5 +1,5 @@
-import { GetCollectionResponse, Price } from '@storypoints/types'
-import { ZERO_ADDRESS, address, hex2buf } from '@storypoints/utils'
+import { GetCollectionResponse, Price } from '@origin/storypoints-types'
+import { ZERO_ADDRESS, address, hex2buf } from '@origin/storypoints-utils'
 
 import { fetchFromReservoir } from './fetch'
 

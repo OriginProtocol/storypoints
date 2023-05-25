@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "outDir": "./dist",
     "paths": {
-      "@storypoints/utils/*": ["../utils/src/*"]
+      "@origin/storypoints-utils/*": ["../utils/src/*"]
     }
   },
   "include": ["./src"]

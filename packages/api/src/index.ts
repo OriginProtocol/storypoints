@@ -1,5 +1,5 @@
 // nonce: 45
-import { collectActivities, updateWallets } from '@storypoints/ingest'
+import { collectActivities, updateWallets } from '@origin/storypoints-ingest'
 import {
   Activity,
   Collection,
@@ -8,8 +8,8 @@ import {
   obtainWorkerLock,
   releaseWorkerLock,
   sequelize,
-} from '@storypoints/models'
-//import { scoreActivity } from '@storypoints/rules'
+} from '@origin/storypoints-models'
+//import { scoreActivity } from '@origin/storypoints-rules'
 import {
   address,
   addressMaybe,
@@ -17,10 +17,10 @@ import {
   dateToUnix,
   hex2buf,
   logger,
-} from '@storypoints/utils'
-import { E_18, getOGN } from '@storypoints/utils/eth'
-import { fetchFromReservoir } from '@storypoints/utils/reservoir'
-import { GetCollectionActivityResponse } from '@storypoints/types'
+} from '@origin/storypoints-utils'
+import { E_18, getOGN } from '@origin/storypoints-utils/eth'
+import { fetchFromReservoir } from '@origin/storypoints-utils/reservoir'
+import { GetCollectionActivityResponse } from '@origin/storypoints-types'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'

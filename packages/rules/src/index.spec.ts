@@ -1,10 +1,10 @@
-import { hex2buf } from '@storypoints/utils'
-import { RuleContext } from '@storypoints/types'
+import { hex2buf } from '@origin/storypoints-utils'
+import { RuleContext } from '@origin/storypoints-types'
 import { expect } from 'chai'
 
 import { loadRules, scoreActivity } from './index'
 
-describe('@storypoints/rules', () => {
+describe('@origin/storypoints-rules', () => {
   beforeEach(() => {})
 
   afterEach(() => {})

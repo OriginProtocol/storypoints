@@ -1,6 +1,6 @@
-import { processReservoirActivity } from '@storypoints/ingest'
-import { ReservoirCollectionActivity } from '@storypoints/types'
-import { getProvider } from '@storypoints/utils'
+import { processReservoirActivity } from '@origin/storypoints-ingest'
+import { ReservoirCollectionActivity } from '@origin/storypoints-types'
+import { getProvider } from '@origin/storypoints-utils'
 
 const out = (a: unknown) =>
   process.stdout.write(JSON.stringify(a, null, 2) + '\n')

@@ -1,13 +1,13 @@
 {
-  "name": "@storypoints/api",
+  "name": "@origin/storypoints-api",
   "description": "Origin Story Points API",
   "author": "Origin Protocol <engineering@originprotocol.com>",
   "version": "0.1.0",
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-sqs": "^3.316.0",
-    "@storypoints/ingest": "^0.1.0",
-    "@storypoints/models": "^0.1.0",
+    "@origin/storypoints-ingest": "^0.1.0",
+    "@origin/storypoints-models": "^0.1.0",
     "@types/supertest": "^2.0.12",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

@@ -12,19 +12,19 @@
     "packages/*"
   ],
   "scripts": {
-    "deploy:polybox": "yarn workspace @storypoints/infra deploy:polybox",
-    "synthesize:polybox": "yarn workspace @storypoints/infra synthesize:polybox",
-    "deploy:sandbox": "yarn workspace @storypoints/infra deploy:sandbox",
-    "destroy:sandbox": "yarn workspace @storypoints/infra destroy:sandbox",
-    "synthesize:sandbox": "yarn workspace @storypoints/infra synthesize:sandbox",
+    "deploy:polybox": "yarn workspace @origin/storypoints-infra deploy:polybox",
+    "synthesize:polybox": "yarn workspace @origin/storypoints-infra synthesize:polybox",
+    "deploy:sandbox": "yarn workspace @origin/storypoints-infra deploy:sandbox",
+    "destroy:sandbox": "yarn workspace @origin/storypoints-infra destroy:sandbox",
+    "synthesize:sandbox": "yarn workspace @origin/storypoints-infra synthesize:sandbox",
     "start:dev": "yarn nodemon",
-    "start": "yarn workspace @storypoints/api start",
+    "start": "yarn workspace @origin/storypoints-api start",
     "lint": "eslint . --ext .ts",
     "test": "DOTENV_CONFIG_PATH=.env.test NODE_ENV=test mocha",
     "test:debug": "LOG_LEVEL=debug mocha",
     "test:watch": "mocha --watch",
-    "migrate": "yarn workspace @storypoints/models migrate",
-    "migrate:undo": "yarn workspace @storypoints/models migrate:undo",
+    "migrate": "yarn workspace @origin/storypoints-models migrate",
+    "migrate:undo": "yarn workspace @origin/storypoints-models migrate:undo",
     "sequelize": "ts-node $(yarn bin sequelize-cli)"
   }
 }

@@ -1,13 +1,13 @@
 {
-  "name": "@storypoints/rules",
+  "name": "@origin/storypoints-rules",
   "description": "Origin Story Points Rules",
   "author": "Origin Protocol <engineering@originprotocol.com>",
   "version": "0.1.0",
   "license": "MIT",
   "main": "src/index.ts",
   "dependencies": {
-    "@storypoints/models": "^0.1.0",
-    "@storypoints/utils": "^0.1.0"
+    "@origin/storypoints-models": "^0.1.0",
+    "@origin/storypoints-utils": "^0.1.0"
   },
   "devDependencies": {
     "@types/chai": "^4.3.4",

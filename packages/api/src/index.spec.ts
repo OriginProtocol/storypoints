@@ -1,7 +1,7 @@
 // test/leader.test.ts
 
-//import {Event} from '@storypoints/models'
-import { unixnow } from '@storypoints/utils'
+//import {Event} from '@origin/storypoints-models'
+import { unixnow } from '@origin/storypoints-utils'
 import { expect } from 'chai'
 import supertest from 'supertest'
 import { Sequelize } from 'sequelize'

@@ -1,4 +1,4 @@
-import { ICollection } from '@storypoints/types'
+import { ICollection } from '@origin/storypoints-types'
 import {
   AutoIncrement,
   Column,

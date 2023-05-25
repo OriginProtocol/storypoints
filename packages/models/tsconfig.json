@@ -8,7 +8,7 @@
     "outDir": "./dist",
     "strictPropertyInitialization": false,
     "paths": {
-      "@storypoints/utils/*": ["../utils/src/*"]
+      "@origin/storypoints-utils/*": ["../utils/src/*"]
     }
   },
   "include": ["./src"]

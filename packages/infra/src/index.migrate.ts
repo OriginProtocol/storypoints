@@ -1,6 +1,6 @@
 // nonce: 1
 // Lambda handler for running DB migrations
-import { migrate /*undo*/ } from '@storypoints/models'
+import { migrate /*undo*/ } from '@origin/storypoints-models'
 
 export async function handler({ params }: { params: { eventName: string } }) {
   const { eventName } = params

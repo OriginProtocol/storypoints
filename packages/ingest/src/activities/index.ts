@@ -2,28 +2,28 @@
  * Fetches newly-created activities from Reservoir, creates Activity rows as
  * appropriate
  */
-import { Activity, Op, hashActivity } from '@storypoints/models'
-import { scoreActivity } from '@storypoints/rules'
+import { Activity, Op, hashActivity } from '@origin/storypoints-models'
+import { scoreActivity } from '@origin/storypoints-rules'
 import {
   ActivityType,
   Adjustment,
   GetCollectionActivityResponse,
   IActivity,
   ReservoirCollectionActivity,
-} from '@storypoints/types'
+} from '@origin/storypoints-types'
 import {
   dateToUnix,
   hex2buf,
   buf2hex,
   logger,
   unixToJSDate,
-} from '@storypoints/utils'
-import { getOGN, getProvider } from '@storypoints/utils/eth'
+} from '@origin/storypoints-utils'
+import { getOGN, getProvider } from '@origin/storypoints-utils/eth'
 import {
   fetchFromReservoir,
   getCheapestOrder,
   getCollectionFloor,
-} from '@storypoints/utils/reservoir'
+} from '@origin/storypoints-utils/reservoir'
 import { JsonRpcProvider } from 'ethers'
 import { URLSearchParams } from 'url'
 

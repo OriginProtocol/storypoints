@@ -1,9 +1,9 @@
-import { hex2buf } from '@storypoints/utils'
+import { hex2buf } from '@origin/storypoints-utils'
 import { expect } from 'chai'
 
 import { getOGNStake } from './ogn'
 
-describe('@storypoints/ingest/wallet/ogn', () => {
+describe('@origin/storypoints-ingest/wallet/ogn', () => {
   it('should get an OGN balance for an account - string', async () => {
     const amount = await getOGNStake(
       '0x57B0DD7967955c92b6e34A038b47Fee63E1eFd1a'

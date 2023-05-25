@@ -1,5 +1,10 @@
-import { IActivity, IRule, RuleContext, RuleFunction } from '@storypoints/types'
-import { buf2hex, isDir, logger } from '@storypoints/utils'
+import {
+  IActivity,
+  IRule,
+  RuleContext,
+  RuleFunction,
+} from '@origin/storypoints-types'
+import { buf2hex, isDir, logger } from '@origin/storypoints-utils'
 import fs from 'fs/promises'
 import path from 'path'
 

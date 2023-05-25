@@ -1,4 +1,4 @@
-import { IWallet } from '@storypoints/types'
+import { IWallet } from '@origin/storypoints-types'
 import {
   Column,
   CreatedAt,

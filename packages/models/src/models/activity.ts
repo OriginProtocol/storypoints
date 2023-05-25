@@ -4,7 +4,7 @@ import {
   buf2hex,
   hex2buf,
   sha256,
-} from '@storypoints/utils'
+} from '@origin/storypoints-utils'
 import {
   ActivityType,
   IActivity,
@@ -14,7 +14,7 @@ import {
   ReservoirCollectionActivity,
   ReservoirOrder,
   ReservoirSale,
-} from '@storypoints/types'
+} from '@origin/storypoints-types'
 import { TransactionResponse } from 'ethers'
 import pick from 'lodash/pick'
 import {

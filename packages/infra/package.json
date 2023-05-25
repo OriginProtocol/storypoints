@@ -1,5 +1,5 @@
 {
-  "name": "@storypoints/infra",
+  "name": "@origin/storypoints-infra",
   "version": "0.1.0",
   "scripts": {
     "deploy:polybox": "cdk deploy polybox",
@@ -27,9 +27,9 @@
     "typescript": "~4.9.5"
   },
   "dependencies": {
-    "@storypoints/api": "^0.1.0",
-    "@storypoints/ingest": "^0.1.0",
-    "@storypoints/models": "^0.1.0",
+    "@origin/storypoints-api": "^0.1.0",
+    "@origin/storypoints-ingest": "^0.1.0",
+    "@origin/storypoints-models": "^0.1.0",
     "aws-cdk": "2.70.0",
     "aws-cdk-lib": "2.70.0",
     "aws-cdk-local": "2.16.0",

@@ -1,5 +1,5 @@
-import { address } from '@storypoints/utils'
-import { getOGN } from '@storypoints/utils/eth'
+import { address } from '@origin/storypoints-utils'
+import { getOGN } from '@origin/storypoints-utils/eth'
 
 /// Fetch an accounts OGN stake
 export async function getOGNStake(

@@ -1,10 +1,10 @@
-/*import { IActivity } from '@storypoints/models'
-import { hex2buf } from '@storypoints/utils'
+/*import { IActivity } from '@origin/storypoints-models'
+import { hex2buf } from '@origin/storypoints-utils'
 import { expect } from 'chai'
 
 import { processCancellations } from './index'
 
-describe.skip('@storypoints/ingest/orders', () => {
+describe.skip('@origin/storypoints-ingest/orders', () => {
   beforeEach(() => {})
 
   afterEach(() => {})

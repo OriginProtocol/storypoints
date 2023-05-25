@@ -1,5 +1,5 @@
 // Input handlers
-import { addressMaybe } from '@storypoints/utils'
+import { addressMaybe } from '@origin/storypoints-utils'
 
 export function integer(v: unknown, defaultValue = 0): number {
   if (typeof v === 'number') {

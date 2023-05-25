@@ -1,13 +1,13 @@
 {
-  "name": "@storypoints/cli",
+  "name": "@origin/storypoints-cli",
   "description": "Origin Story Points CLI Utilities",
   "author": "Origin Protocol <engineering@originprotocol.com>",
   "version": "0.1.0",
   "license": "MIT",
   "dependencies": {
-    "@storypoints/ingest": "^0.1.0",
-    "@storypoints/models": "^0.1.0",
-    "@storypoints/utils": "^0.1.0"
+    "@origin/storypoints-ingest": "^0.1.0",
+    "@origin/storypoints-models": "^0.1.0",
+    "@origin/storypoints-utils": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^18.15.11",

@@ -1,5 +1,5 @@
-import { Activity, Wallet, sequelize } from '@storypoints/models'
-import { buf2hex, logger } from '@storypoints/utils'
+import { Activity, Wallet, sequelize } from '@origin/storypoints-models'
+import { buf2hex, logger } from '@origin/storypoints-utils'
 
 import { resolveENS } from './name'
 import { getOGNStake } from './ogn'

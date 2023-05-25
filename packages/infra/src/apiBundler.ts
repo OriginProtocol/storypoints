@@ -4,7 +4,7 @@ import { buildSync } from 'esbuild'
 import { ILocalBundling } from 'aws-cdk-lib'
 
 const packageJson = `{
-  "name": "@storypoints/api",
+  "name": "@origin/storypoints-api",
   "description": "Origin Story Points API",
   "author": "Origin Protocol <engineering@originprotocol.com>",
   "version": "0.1.0",

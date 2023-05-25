@@ -2,9 +2,13 @@
  * Fetches order data Reservoir
  */
 
-import { fetchFromReservoir } from '@storypoints/utils/reservoir'
-import { GetOrderResponse, IActivity, ReservoirOrder } from '@storypoints/types'
-import { buf2hex, logger } from '@storypoints/utils'
+import { fetchFromReservoir } from '@origin/storypoints-utils/reservoir'
+import {
+  GetOrderResponse,
+  IActivity,
+  ReservoirOrder,
+} from '@origin/storypoints-types'
+import { buf2hex, logger } from '@origin/storypoints-utils'
 
 const log = logger.child({ app: 'ingest', module: 'orders' })
 
