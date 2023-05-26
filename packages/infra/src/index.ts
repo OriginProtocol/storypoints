@@ -563,6 +563,16 @@ export class StoryPoints extends Stack {
 
 const app = new App()
 
+new StoryPoints(app, 'prod', {
+  domainName: 'points.story.xyz',
+  enableTestRules: false,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: 'us-east-2',
+  },
+  privateSubnets: ['172.31.127.0/24', '172.31.137.0/24'],
+  removalPolicy: RemovalPolicy.DESTROY,
+})
 new StoryPoints(app, 'sandbox', {
   domainName: 'sandbox.ogn-review.net', // TODO: make this a CDK param?
   enableTestRules: false,

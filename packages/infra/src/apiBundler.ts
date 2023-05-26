@@ -77,6 +77,7 @@ export default class ApiBundler implements ILocalBundling {
     )
     const secretFiles = fs
       .readdirSync(secretRulesSourceDir)
+      .filter((f) => f.endsWith('.ts'))
       .map((f) => path.join(secretRulesSourceDir, f))
 
     buildSync({

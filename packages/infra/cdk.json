@@ -41,6 +41,11 @@
     "@aws-cdk/aws-ec2:launchTemplateDefaultUserData": true,
     "@aws-cdk/aws-secretsmanager:useAttachedSecretResourcePolicyForSecretTargetAttachments": true,
     "@aws-cdk/aws-redshift:columnId": true,
+    "prod": {
+      "account": "197001192061",
+      "configSecretsArn": "arn:aws:secretsmanager:us-east-2:197001192061:secret:storypoints/prod-YD1yVm",
+      "vpc": "vpc-022f5b38273c6a6ee"
+    },
     "polybox": {
       "account": "197001192061",
       "configSecretsArn": "arn:aws:secretsmanager:us-east-2:197001192061:secret:storypoints/polybox-q2tqYj",
