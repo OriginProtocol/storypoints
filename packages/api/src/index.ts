@@ -353,25 +353,25 @@ app.get(
       })
       if (collections.length) {
         // TODO: This is probably going to be an issue at scale
-        const collectionParams = collections
-          .map((c) => buf2hex(c.contractAddress))
-          .join('&collection=')
+        for (const collection of collections) {
+          const collectionParam = buf2hex(collection.contractAddress)
 
-        const typesParams =
-          '&types=ask&types=ask_cancel&types=bid&types=bid_cancel&types=sale'
-        const json = await fetchFromReservoir<GetCollectionActivityResponse>({
-          url: `/collections/activity/v6?includeMetadata=false${typesParams}&limit=1&collection=${collectionParams}`,
-        })
+          const typesParams =
+            '&types=ask&types=ask_cancel&types=bid&types=bid_cancel&types=sale'
+          const json = await fetchFromReservoir<GetCollectionActivityResponse>({
+            url: `/collections/activity/v6?includeMetadata=false${typesParams}&limit=1&collection=${collectionParam}`,
+          })
 
-        if (json.activities?.length) {
-          const act = json.activities[0]
-          if (act.timestamp) {
-            reservoir = act.timestamp
+          if (json.activities?.length) {
+            const act = json.activities[0]
+            if (act.timestamp && act.timestamp > reservoir) {
+              reservoir = act.timestamp
+            } else {
+              log.debug('No timestamp on latest Reservoir activity?')
+            }
           } else {
-            log.debug('No timestamp on latest Reservoir activity?')
+            log.debug('No latest Reservoir activity?')
           }
-        } else {
-          log.debug('No latest Reservoir activity?')
         }
       }
     } catch (error) {
