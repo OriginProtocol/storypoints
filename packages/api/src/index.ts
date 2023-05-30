@@ -282,6 +282,7 @@ app.get(
 
 app.get(
   '/activity',
+  apiKeyMiddleware,
   awrap(async function (req: Request, res: Response): Promise<void> {
     const contractAddresses = inhand.addresses(
       req.query.contractAddress?.toString() ?? ''
