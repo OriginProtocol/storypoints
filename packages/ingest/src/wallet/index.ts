@@ -52,6 +52,10 @@ export async function updateWallets(): Promise<void> {
       ) {
         log.debug(`Updated wallet entry for ${buf2hex(row.walletAddress)}`)
         await wallet.update({ ...data })
+      } else {
+        // We want to mark it as updates so we aren't checking it constantly
+        wallet.changed('updatedAt', true)
+        await wallet.update({ updatedAt: new Date() })
       }
     }
   }
