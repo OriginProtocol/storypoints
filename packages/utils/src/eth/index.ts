@@ -47,3 +47,16 @@ export function getOGN(): Contract {
 
   return ogn
 }
+
+export function getSeries(): Contract {
+  if (!ogn) {
+    const provi = getMainnetProvider()
+    ogn = new Contract(
+      '0xCcE8E784c777fb9435F89f4E45f8b7FC49f7669f',
+      ['function balanceOf(address owner) view returns (uint256)'],
+      provi
+    )
+  }
+
+  return ogn
+}

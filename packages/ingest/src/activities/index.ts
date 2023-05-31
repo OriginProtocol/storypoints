@@ -18,7 +18,7 @@ import {
   logger,
   unixToJSDate,
 } from '@origin/storypoints-utils'
-import { getOGN, getProvider } from '@origin/storypoints-utils/eth'
+import { getSeries, getProvider } from '@origin/storypoints-utils/eth'
 import {
   fetchFromReservoir,
   getCheapestOrder,
@@ -353,9 +353,9 @@ async function addTxBlob(
 }
 
 async function getUserStake(activity: IActivity): Promise<string> {
-  const ogn = getOGN()
+  const series = getSeries()
   const stake = activity.walletAddress
-    ? ((await ogn.balanceOf(buf2hex(activity.walletAddress))) as bigint)
+    ? ((await series.balanceOf(buf2hex(activity.walletAddress))) as bigint)
     : 0n
   return stake.toString()
 }
