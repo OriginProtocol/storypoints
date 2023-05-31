@@ -543,7 +543,7 @@ export class StoryPoints extends Stack {
       }),
     )
     const walletRule = new Rule(this, 'wallet-task', {
-      schedule: Schedule.rate(Duration.hours(2)),
+      schedule: Schedule.rate(Duration.minutes(15)),
     })
     walletRule.addTarget(
       new SqsQueue(workerQueue, {
