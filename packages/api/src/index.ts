@@ -18,7 +18,7 @@ import {
   hex2buf,
   logger,
 } from '@origin/storypoints-utils'
-import { E_18, getOGN } from '@origin/storypoints-utils/eth'
+import { E_18, getSeries } from '@origin/storypoints-utils/eth'
 import { fetchFromReservoir } from '@origin/storypoints-utils/reservoir'
 import { GetCollectionActivityResponse } from '@origin/storypoints-types'
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
@@ -264,8 +264,8 @@ app.get(
 
       const points = (userRes[0].getDataValue('score') as number | null) ?? 0
 
-      const ogn = getOGN()
-      const stake = (await ogn.balanceOf(walletAddress)) as bigint
+      const series = getSeries()
+      const stake = (await series.balanceOf(walletAddress)) as bigint
       const boost = findBoost(stake)
 
       res
