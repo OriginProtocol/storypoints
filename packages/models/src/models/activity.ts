@@ -12,7 +12,8 @@ import {
   JSONObject,
   JSONValue,
   ReservoirCollectionActivity,
-  ReservoirOrder,
+  ReservoirOrderAsk,
+  ReservoirOrderBid,
   ReservoirSale,
 } from '@origin/storypoints-types'
 import { TransactionResponse } from 'ethers'
@@ -25,9 +26,6 @@ import {
   CreatedAt,
   DataType,
   Default,
-  ForeignKey,
-  //HasMany,
-  HasOne,
   Model,
   PrimaryKey,
   Table,
@@ -127,7 +125,7 @@ export default class Activity extends Model implements IActivity {
     type: DataType.JSONB,
     field: 'order_blob',
   })
-  orderBlob?: ReservoirOrder
+  orderBlob?: ReservoirOrderAsk | ReservoirOrderBid
 
   @Column({
     type: DataType.JSONB,

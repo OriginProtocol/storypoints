@@ -3,13 +3,15 @@ import { Price } from './base'
 import {
   ActivityType,
   ReservoirCollectionActivity,
-  ReservoirOrder,
+  ReservoirOrderAsk,
+  ReservoirOrderBid,
   ReservoirSale,
 } from './reservoir'
 
 export interface IActivityContext {
   cheapestOrder?: boolean
   collectionFloorPrice?: Price
+  duplicateOrder?: boolean
   userOgnStake?: string
 }
 
@@ -21,7 +23,7 @@ export interface IActivity {
   currency?: Buffer
   multiplier: number
   description?: string
-  orderBlob?: ReservoirOrder
+  orderBlob?: ReservoirOrderAsk | ReservoirOrderBid
   points: number
   price?: string
   priceUSD?: number

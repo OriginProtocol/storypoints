@@ -10,6 +10,8 @@ import {
   GetCollectionActivityResponse,
   IActivity,
   ReservoirCollectionActivity,
+  ReservoirOrderAsk,
+  ReservoirOrderBid,
 } from '@origin/storypoints-types'
 import {
   dateToUnix,
@@ -21,8 +23,10 @@ import {
 import { getSeries, getProvider } from '@origin/storypoints-utils/eth'
 import {
   fetchFromReservoir,
-  getCheapestOrder,
   getCollectionFloor,
+  getOrderAsks,
+  getOrderBids,
+  getTokenSetId,
 } from '@origin/storypoints-utils/reservoir'
 import { JsonRpcProvider } from 'ethers'
 import { URLSearchParams } from 'url'
@@ -191,13 +195,27 @@ export async function processReservoirActivity(
   }
 
   actProps.contextBlob = {
-    cheapestOrder: await isCheapestOrder(actProps),
     collectionFloorPrice: ['ask', 'bid'].includes(actProps.type)
       ? await getCollectionFloor(actProps.contractAddress)
       : undefined,
     userOgnStake: !actProps.type.endsWith('_cancel')
       ? await getUserStake(actProps)
       : undefined,
+  }
+
+  if (actProps.type === 'ask' && actProps.activityBlob.token?.tokenId) {
+    const tokenAsks = await getOrderAsks(
+      actProps.contractAddress,
+      actProps.activityBlob.token.tokenId
+    )
+    actProps.contextBlob.cheapestOrder = isCheapestAsk(actProps, tokenAsks)
+    actProps.contextBlob.duplicateOrder = isDuplicateAsk(actProps, tokenAsks)
+  } else if (actProps.type === 'bid' && actProps.walletAddress) {
+    const tokenBids = await getOrderBids(
+      actProps.contractAddress,
+      actProps.walletAddress
+    )
+    actProps.contextBlob.duplicateOrder = isDuplicateBid(actProps, tokenBids)
   }
 
   if (actProps.type.endsWith('_cancel')) {
@@ -216,6 +234,7 @@ export async function processReservoirActivity(
 
   try {
     log.debug(`Inserting Activity ${buf2hex(actProps.activityHash)}`)
+
     if (!simulate) {
       await Activity.create({ ...actProps })
     } else {
@@ -360,34 +379,75 @@ async function getUserStake(activity: IActivity): Promise<string> {
   return stake.toString()
 }
 
-async function isCheapestOrder(
-  activity: IActivity
-): Promise<boolean | undefined> {
-  if (['ask', 'bid'].includes(activity.type)) {
-    if (activity.type === 'ask') {
-      if (activity.activityBlob.token?.tokenId) {
-        const cheapest = await getCheapestOrder(
-          activity.contractAddress,
-          activity.activityBlob.token.tokenId
-        )
-
-        if (
-          // if we have a response
-          cheapest &&
-          // and its not the order we're handling now
-          hex2buf(cheapest.id) !== activity.reservoirOrderId &&
-          // and it's the same owner
-          hex2buf(cheapest.maker) === activity.walletAddress
-        ) {
-          // it ain't the cheapest
-          return false
-        }
-      }
-    }
-    return true
+/// Given an activity and asks for a token by an owner, determine if it's the
+/// cheapest listing
+function isCheapestAsk(
+  activity: IActivity,
+  asks: ReservoirOrderAsk[]
+): boolean {
+  // NOTE: asks should be in order of price low to high
+  if (
+    // if we have other orders
+    asks.length &&
+    // and the cheapest is not the order we're handling now
+    activity.reservoirOrderId &&
+    !hex2buf(asks[0].id).equals(activity.reservoirOrderId) &&
+    // and it's the same owner
+    activity.walletAddress &&
+    hex2buf(asks[0].maker).equals(activity.walletAddress)
+  ) {
+    // it ain't the cheapest
+    return false
   }
 
-  return undefined
+  return true
+}
+
+/// Given an activity and asks for a token, determine if it's is a duplicate
+function isDuplicateAsk(
+  activity: IActivity,
+  asks: ReservoirOrderAsk[]
+): boolean {
+  const tokenSetId = getTokenSetId(activity)
+
+  if (!tokenSetId) {
+    return false
+  }
+
+  const storyAsks = asks.filter((a) => a.source?.domain === 'story.xyz')
+
+  for (const ask of storyAsks) {
+    // Ignore same exact order
+    if (
+      !activity.reservoirOrderId ||
+      hex2buf(ask.id).equals(activity.reservoirOrderId)
+    )
+      continue
+
+    // Same maker and token set is duplicate
+    if (
+      activity.walletAddress &&
+      hex2buf(ask.maker).equals(activity.walletAddress) &&
+      ask.tokenSetId === tokenSetId
+    ) {
+      return true
+    }
+  }
+
+  return false
+}
+
+/// Given an activity and bids for a collection, determine if it's is a duplicate
+function isDuplicateBid(
+  activity: IActivity,
+  bids: ReservoirOrderBid[]
+): boolean {
+  return (
+    bids.length > 0 &&
+    bids
+      .filter((b) => b.source?.domain === 'story.xyz')
+      .findIndex((b) => hex2buf(b.id) !== activity.reservoirOrderId) >= 0
+  )
 }
 
 export async function makeAdjustments(

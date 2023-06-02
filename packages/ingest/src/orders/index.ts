@@ -4,9 +4,11 @@
 
 import { fetchFromReservoir } from '@origin/storypoints-utils/reservoir'
 import {
-  GetOrderResponse,
+  GetOrderAskResponse,
+  GetOrderBidResponse,
   IActivity,
-  ReservoirOrder,
+  ReservoirOrderAsk,
+  ReservoirOrderBid,
 } from '@origin/storypoints-types'
 import { buf2hex, logger } from '@origin/storypoints-utils'
 
@@ -15,7 +17,7 @@ const log = logger.child({ app: 'ingest', module: 'orders' })
 // Fetch an order (ask) form Reservoir
 export async function fetchOrderAsk(
   orderId: string
-): Promise<ReservoirOrder | undefined> {
+): Promise<ReservoirOrderAsk | undefined> {
   const params = new URLSearchParams({
     ids: orderId,
   })
@@ -23,7 +25,7 @@ export async function fetchOrderAsk(
 
   log.debug(`Fetching ${url}`)
 
-  const json = await fetchFromReservoir<GetOrderResponse>({
+  const json = await fetchFromReservoir<GetOrderAskResponse>({
     url,
   })
 
@@ -33,7 +35,7 @@ export async function fetchOrderAsk(
 // Fetch an order (bid) form Reservoir
 export async function fetchOrderBid(
   orderId: string
-): Promise<ReservoirOrder | undefined> {
+): Promise<ReservoirOrderBid | undefined> {
   const params = new URLSearchParams({
     ids: orderId,
   })
@@ -41,7 +43,7 @@ export async function fetchOrderBid(
 
   log.debug(`Fetching ${url}`)
 
-  const json = await fetchFromReservoir<GetOrderResponse>({
+  const json = await fetchFromReservoir<GetOrderBidResponse>({
     url,
   })
 

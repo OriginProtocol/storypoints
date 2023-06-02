@@ -65,7 +65,11 @@ export type GetSalesResponse =
   paths['/sales/v4']['get']['responses']['200']['schema']
 export type ReservoirSales = GetSalesResponse['sales']
 export type ReservoirSale = NonNullable<ReservoirSales>['0']
-export type GetOrderResponse =
+export type GetOrderAskResponse =
   paths['/orders/asks/v4']['get']['responses']['200']['schema']
-export type ReservoirOrders = GetOrderResponse['orders']
-export type ReservoirOrder = NonNullable<ReservoirOrders>['0']
+export type ReservoirOrderAsks = GetOrderAskResponse['orders']
+export type ReservoirOrderAsk = NonNullable<ReservoirOrderAsks>['0']
+export type GetOrderBidResponse =
+  paths['/orders/bids/v4']['get']['responses']['200']['schema']
+export type ReservoirOrderBids = GetOrderBidResponse['orders']
+export type ReservoirOrderBid = NonNullable<ReservoirOrderBids>['0']
