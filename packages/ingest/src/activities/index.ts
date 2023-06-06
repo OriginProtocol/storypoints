@@ -240,6 +240,8 @@ export async function processReservoirActivity(
     } else {
       cliout?.('create activity:')
       cliout?.(actProps)
+      cliout?.(`points: ${actProps.points}`)
+      cliout?.(`multiplier: ${actProps.multiplier}`)
     }
     return true
   } catch (err) {
@@ -444,9 +446,11 @@ function isDuplicateBid(
 ): boolean {
   return (
     bids.length > 0 &&
+    !!activity.reservoirOrderId &&
     bids
       .filter((b) => b.source?.domain === 'story.xyz')
-      .findIndex((b) => hex2buf(b.id) !== activity.reservoirOrderId) >= 0
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      .findIndex((b) => !hex2buf(b.id).equals(activity.reservoirOrderId!)) >= 0
   )
 }
 
