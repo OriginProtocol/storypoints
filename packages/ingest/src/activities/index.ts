@@ -356,11 +356,13 @@ async function adjustForCancellation(activity: IActivity): Promise<void> {
   // If we know about the order...
   if (cancelledOrder) {
     activity.valid = cancelledOrder.valid
+    activity.reason = cancelledOrder.reason
     activity.points = cancelledOrder.points
     // negate its points
     activity.multiplier = cancelledOrder.multiplier * -1
   } else {
     activity.valid = false
+    activity.reason = '82b1c2c6'
   }
 }
 
