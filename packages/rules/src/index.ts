@@ -65,6 +65,7 @@ export async function scoreActivity(activity: IActivity): Promise<RuleContext> {
     multiplier: 1,
     points: 0,
     adjustments: [],
+    synthetics: [],
   }
 
   let isInvalid = false

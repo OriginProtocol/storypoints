@@ -7,6 +7,7 @@ export type ActivityType =
   | 'bid_cancel'
   | 'mint'
   | 'sale'
+  | 'synthetic'
   | 'transfer'
   | 'unknown'
 

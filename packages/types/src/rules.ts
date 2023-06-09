@@ -14,6 +14,7 @@ export interface RuleContext {
   points: number // The amount of points awarded by the rules
   multiplier: number // The points multiplier
   adjustments: Adjustment[]
+  synthetics: IActivity[] // Synthetic activities created by rules
 }
 
 export type RuleFunction = (

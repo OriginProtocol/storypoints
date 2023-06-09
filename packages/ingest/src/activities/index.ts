@@ -227,6 +227,13 @@ export async function processReservoirActivity(
     actProps.points = score.points
     actProps.reason = score.reason
 
+    // Create any synthetic activities rules spit out
+    if (score.synthetics.length) {
+      for (const synth of score.synthetics) {
+        await createActivity(synth, { cliout, simulate })
+      }
+    }
+
     if (score.adjustments.length) {
       await makeAdjustments(score.adjustments, { cliout, simulate })
     }
@@ -234,15 +241,7 @@ export async function processReservoirActivity(
 
   try {
     log.debug(`Inserting Activity ${buf2hex(actProps.activityHash)}`)
-
-    if (!simulate) {
-      await Activity.create({ ...actProps })
-    } else {
-      cliout?.('create activity:')
-      cliout?.(actProps)
-      cliout?.(`points: ${actProps.points}`)
-      cliout?.(`multiplier: ${actProps.multiplier}`)
-    }
+    await createActivity(actProps, { cliout, simulate })
     return true
   } catch (err) {
     console.error(err)
@@ -333,6 +332,26 @@ export async function collectActivities({
   log.info(
     `Finished collecting ${insertCount} activities with ${requestCount} requests`
   )
+}
+
+async function createActivity(
+  act: IActivity,
+  {
+    cliout,
+    simulate = false,
+  }: {
+    cliout?: CLIOut
+    simulate?: boolean
+  }
+) {
+  if (!simulate) {
+    await Activity.create({ ...act })
+  } else {
+    cliout?.('createActivity:')
+    cliout?.(act)
+    cliout?.(`points: ${act.points}`)
+    cliout?.(`multiplier: ${act.multiplier}`)
+  }
 }
 
 async function activityExists(activityHash: Buffer): Promise<boolean> {
