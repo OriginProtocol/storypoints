@@ -1,6 +1,8 @@
 import { logger, hex2buf, buf2hex } from '@origin/storypoints-utils'
 import { Collection, Activity, Op, sequelize } from '@origin/storypoints-models'
-// import { BigNumber } from '@ethersproject/bignumber'
+import { BigNumber } from '@ethersproject/bignumber'
+import fs from 'fs'
+import path from 'path'
 
 // Use this script to get the OGN rewards split per address
 // for a given promo period. Output is a JSON file.
@@ -62,27 +64,48 @@ const getRewardsSplit = async (contractAddress: string, startTime: number, endTi
     log.info(`Found ${activities.length} activities...`)
 
     const totalPoints = activities.reduce((acc, activity) => {
-        return acc + activity.getDataValue('score') as number
+        const score = activity.getDataValue('score') as number
+        return acc + score
     }, 0)
 
-    log.info(`Total points: ${totalPoints}...`)
+    const totalPointsBn = BigNumber.from(totalPoints)
 
-    const totalOgn = 500000
+    log.info(`Total points: ${totalPoints.toString()}...`)
 
-    const rewardsSplit: Record<string, number> = {}
+    const totalOgn = BigNumber.from(500000).mul(BigNumber.from(10).pow(18))
+
+    const rewardsSplit: Record<string, BigNumber> = {}
 
     activities.forEach((activity) => {
+        const oneBn = BigNumber.from(1).mul(BigNumber.from(10).pow(18))
         const score = activity.getDataValue('score') as number
         const address = buf2hex(activity.getDataValue('walletAddress') as Buffer)
-        const shareOfPoints = score / totalPoints
-        const ognRewardsSplit = totalOgn * shareOfPoints
+
+        const scoreBn = BigNumber.from(score).mul(oneBn)
+        const shareOfPointsBn = scoreBn.div(totalPointsBn)
+
+        const ognRewardsSplit = totalOgn.mul(shareOfPointsBn).div(oneBn)
 
         rewardsSplit[address] = ognRewardsSplit
     })
 
+    const rewardsSplitTotal = Object.values(rewardsSplit).reduce(
+        (acc, val) => {
+            const accBn = BigNumber.from(acc)
+            const valBn = BigNumber.from(val)
+            const totalBn = accBn.add(valBn)
+            return totalBn
+        }, BigNumber.from(0))
+
     // Output the JSON
+    fs.writeFileSync(`${path.resolve(__dirname)}/../data/rewards-split-${contractAddress}-${startTime}-${endTime}.json`, JSON.stringify(rewardsSplit, null, 2))
+
+    // Debug/info
     log.info(rewardsSplit)
-    log.info(`rewardsTotal: ${Object.values(rewardsSplit).reduce((acc, val) => acc + val, 0)}`)
+    log.info(`Total points amassed: ${totalPoints}`)
+    log.info(`OGN rewards available: ${totalOgn.toString()}`)
+    log.info(`Rewards split total: ${rewardsSplitTotal.toString()}`)
+    log.info(`Rewards total diff: ${totalOgn.sub(rewardsSplitTotal).toString()}`)
     log.info(`Rewards split created with ${Object.keys(rewardsSplit).length} entries.`)
 }
 
