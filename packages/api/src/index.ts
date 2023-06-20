@@ -17,6 +17,7 @@ import {
   dateToUnix,
   hex2buf,
   logger,
+  unixnow,
 } from '@origin/storypoints-utils'
 import { E_18, getSeries } from '@origin/storypoints-utils/eth'
 import { fetchFromReservoir } from '@origin/storypoints-utils/reservoir'
@@ -438,6 +439,7 @@ const workerHandler = awrap(async function (
   next: NextFunction
 ): Promise<void> {
   req.setTimeout(300000) // 5m
+  const start = unixnow()
 
   const body = req.body as {
     task?: string
@@ -508,7 +510,13 @@ const workerHandler = awrap(async function (
     }
   }
 
-  log.debug(body, 'Completed worker request')
+  const end = unixnow()
+  log.debug(
+    body,
+    `Completed ${body.task ?? 'default'} worker request in ${
+      end - start
+    } seconds`
+  )
 
   res.status(200).json({ success: true })
   next()
