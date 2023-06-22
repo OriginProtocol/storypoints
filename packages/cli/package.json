@@ -20,6 +20,7 @@
   },
   "scripts": {
     "lint": "eslint . --ext .ts",
-    "processActivity": "ts-node src/processActivity.ts"
+    "processActivity": "ts-node src/processActivity.ts",
+    "getRewardsSplit": "ts-node src/getRewardsSplit.ts"
   }
 }
