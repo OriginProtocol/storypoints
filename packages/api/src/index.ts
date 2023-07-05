@@ -103,7 +103,7 @@ app.get(
       req.query.contractAddresses?.toString() ?? ''
     )
     const activityType = inhand.string(req.query.type?.toString() ?? '')
-    const limit = inhand.integer(req.query.limit, 100)
+    const limit = inhand.integer(req.query.limit, 500)
     const sortField = inhand.stringOptions(
       req.query.sortField?.toString() ?? '',
       ['score', 'walletAddress'],
