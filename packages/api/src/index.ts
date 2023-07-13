@@ -605,6 +605,95 @@ app.post(
   })
 )
 
+app.get(
+  '/rewards',
+  apiKeyMiddleware,
+  awrap(async function (req: Request, res: Response): Promise<void> {
+    const contractAddresses = inhand.addresses(
+      req.query.contractAddresses?.toString() ?? ''
+    )
+    const start = inhand.date(req.query.start, new Date(0))
+    const end = inhand.date(req.query.end, new Date())
+    const rewards = inhand.bigint(req.query.rewards, 1000000000000000000n)
+
+    const where: Record<string, unknown> = {
+      valid: true,
+      points: {
+        [Op.gt]: 0,
+      },
+      timestamp: {
+        [Op.between]: [start, end],
+      },
+    }
+    if (contractAddresses.length) {
+      where.contractAddress = {
+        [Op.in]: contractAddresses.map((a) => hex2buf(a)),
+      }
+    }
+
+    try {
+      const leaders = (await Activity.findAll({
+        where,
+        attributes: [
+          'walletAddress',
+          [
+            sequelize.literal(
+              'SUM(ROUND(multiplier * points * adjustment_multiplier))'
+            ),
+            'score',
+          ],
+        ],
+        group: ['walletAddress'],
+        order: [['score', 'desc']],
+      })) as unknown as {
+        walletAddress: Buffer
+        score: number
+        getDataValue: (key: string) => unknown
+      }[]
+      const totalPoints = leaders.reduce((acc, activity) => {
+        const score = activity.getDataValue('score') as number
+        return acc + score
+      }, 0)
+
+      const totalPointsBn = BigInt(totalPoints)
+
+      const rewardsSplit = leaders.reduce<Record<string, string>>(
+        (acc, leader) => {
+          const score = BigInt(leader.getDataValue('score') as number)
+          const address = buf2hex(leader.walletAddress)
+
+          const scoreBn = BigInt(score) * E_18
+          const share = scoreBn / totalPointsBn
+          const split = (rewards * share) / E_18
+
+          acc[address] = split.toString()
+          return acc
+        },
+        {}
+      )
+
+      const rewardsSplitTotal = Object.values(rewardsSplit).reduce(
+        (acc, val) => acc + BigInt(val),
+        0n
+      )
+
+      res.status(200).json({
+        totalRewards: rewards.toString(),
+        rewardsSplitTotal: rewardsSplitTotal.toString(),
+        totalPoints: totalPointsBn.toString(),
+        rewardsSplit,
+        diff: (rewards - rewardsSplitTotal).toString(),
+        totalAwardees: rewardsSplit.length,
+      })
+      return
+    } catch (error) {
+      log.error(error, 'Error while fetching rewards split')
+      res.status(500).json({ error: 'Internal Server Error' })
+      return
+    }
+  })
+)
+
 /*app.post(
   '/rescore',
   apiKeyMiddleware,
