@@ -55,6 +55,7 @@ import ApiBundler from './apiBundler'
 interface StoryPointsProps extends StackProps {
   domainName: string
   enableTestRules?: boolean
+  disableIngest?: boolean
   instanceType?: string
   privateSubnets?: string[]
   removalPolicy?: RemovalPolicy
@@ -66,6 +67,7 @@ export class StoryPoints extends Stack {
     super(scope, id, props)
     const { region } = Stack.of(this)
     const {
+      disableIngest,
       domainName,
       enableTestRules,
       instanceType,
@@ -532,26 +534,28 @@ export class StoryPoints extends Stack {
     })
 
     // Schedule tasks
-    const collectRule = new Rule(this, 'update-task', {
-      schedule: Schedule.rate(Duration.minutes(1)),
-    })
-    collectRule.addTarget(
-      new SqsQueue(workerQueue, {
-        message: RuleTargetInput.fromObject({
-          task: 'update',
+    if (!disableIngest) {
+      const collectRule = new Rule(this, 'update-task', {
+        schedule: Schedule.rate(Duration.minutes(1)),
+      })
+      collectRule.addTarget(
+        new SqsQueue(workerQueue, {
+          message: RuleTargetInput.fromObject({
+            task: 'update',
+          }),
         }),
-      }),
-    )
-    const walletRule = new Rule(this, 'wallet-task', {
-      schedule: Schedule.rate(Duration.minutes(15)),
-    })
-    walletRule.addTarget(
-      new SqsQueue(workerQueue, {
-        message: RuleTargetInput.fromObject({
-          task: 'wallet',
+      )
+      const walletRule = new Rule(this, 'wallet-task', {
+        schedule: Schedule.rate(Duration.minutes(15)),
+      })
+      walletRule.addTarget(
+        new SqsQueue(workerQueue, {
+          message: RuleTargetInput.fromObject({
+            task: 'wallet',
+          }),
         }),
-      }),
-    )
+      )
+    }
 
     appVersion.addDependency(ebApplication)
     appVersion.node.addDependency(ebApplication)
@@ -565,6 +569,7 @@ const app = new App()
 
 new StoryPoints(app, 'prod', {
   domainName: 'points.story.xyz',
+  disableIngest: true, // Temporarily disable ingestion
   enableTestRules: false,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
